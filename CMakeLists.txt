@@ -26,7 +26,12 @@ add_executable(PoissonReconCGAL
         ${GEOMETRY}
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+add_subdirectory(third_party)
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/third_party/Tetgen
+)
 
 if(CGAL_Qt5_FOUND)
     target_link_libraries(${PROJECT_NAME} PUBLIC CGAL::CGAL_Basic_viewer)
@@ -35,3 +40,4 @@ else()
 endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE CGAL::CGAL)
+target_link_libraries(${PROJECT_NAME} PRIVATE TetGen)
