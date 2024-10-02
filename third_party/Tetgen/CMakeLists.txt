@@ -12,3 +12,5 @@ add_library(${PROJECT_NAME} STATIC ${SOURCES} ${HEADERS})
 
 # 设置包含目录，用于查找头文件
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+set_target_properties(${PROJECT_NAME} PROPERTIES "COMPILE_DEFINITIONS" TETLIBRARY)
