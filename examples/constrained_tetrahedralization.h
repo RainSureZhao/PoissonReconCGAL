@@ -14,7 +14,54 @@
 #include <algorithm>
 #include <array>
 #include <set>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <assimp/Exporter.hpp>
 #include "tetgen.h"
+#include "utils/read_polylines.h"
+
+
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+
+#include <CGAL/Mesh_triangulation_3.h>
+#include <CGAL/Mesh_complex_3_in_triangulation_3.h>
+#include <CGAL/Mesh_criteria_3.h>
+
+#include <CGAL/Implicit_to_labeling_function_wrapper.h>
+#include <CGAL/Labeled_mesh_domain_3.h>
+#include <CGAL/make_mesh_3.h>
+#include "utils/implicit_functions.h"
+
+// IO
+#include <CGAL/IO/File_medit.h>
+
+namespace params = CGAL::parameters;
+
+#ifdef CGAL_CONCURRENT_MESH_3
+typedef CGAL::Parallel_tag Concurrency_tag;
+#else
+typedef CGAL::Sequential_tag Concurrency_tag;
+#endif
+
+// Domain
+typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+typedef K::FT FT;
+typedef K::Point_3 Point;
+typedef FT_to_point_function_wrapper<double, K::Point_3> Function;
+typedef CGAL::Implicit_multi_domain_to_labeling_function_wrapper<Function>
+        Function_wrapper;
+typedef Function_wrapper::Function_vector Function_vector;
+typedef CGAL::Labeled_mesh_domain_3<K> Mesh_domain;
+
+// Triangulation
+typedef CGAL::Mesh_triangulation_3<Mesh_domain,CGAL::Default,Concurrency_tag>::type Tr;
+typedef CGAL::Mesh_complex_3_in_triangulation_3<Tr> C3t3;
+
+// Mesh Criteria
+typedef CGAL::Mesh_criteria_3<Tr> Mesh_criteria;
+typedef Mesh_criteria::Facet_criteria    Facet_criteria;
+typedef Mesh_criteria::Cell_criteria     Cell_criteria;
+
 
 namespace cdt {
     // 定义数据结构
@@ -41,6 +88,30 @@ namespace cdt {
     struct Tetrahedron {
         int vertices[4];
     };
+
+    typedef std::tuple<int, int, int> Triangle; // 用三个顶点索引定义一个三角面
+
+    // 计算两个顶点之间的向量
+    Vertex subtract(const Vertex& a, const Vertex& b) {
+        return {a.x - b.x, a.y - b.y, a.z - b.z};
+    }
+
+    // 计算叉乘，得到法向量
+    Vertex crossProduct(const Vertex& a, const Vertex& b) {
+        return {
+                a.y * b.z - a.z * b.y,
+                a.z * b.x - a.x * b.z,
+                a.x * b.y - a.y * b.x
+        };
+    }
+
+    // 归一化向量
+    void normalize(Vertex& v) {
+        double length = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+        v.x /= length;
+        v.y /= length;
+        v.z /= length;
+    }
 
 /**
  * @brief Constrained tetrahedralization with Tetgen
@@ -79,6 +150,71 @@ namespace cdt {
         out.save_edges(output_file);
 
         std::cout << "Tetrahedralization complete. Results saved to: " << output << std::endl;
+    }
+
+    /**
+     * @brief 从隐函数中生成四面体网格
+     * @param function 隐函数
+     * @param bounding_sphere 包围球
+     * @param output 输出文件，xxx.mesh
+     */
+    void tetrahedralization_by_implicit_function(const Function& function, const K::Sphere_3& bounding_sphere,
+                                                 const std::string& output) {
+        /// [Domain creation] (Warning: Sphere_3 constructor uses squared radius !)
+        Mesh_domain domain = Mesh_domain::create_implicit_mesh_domain(function, bounding_sphere);
+
+        /// [Domain creation]
+
+        // Mesh criteria
+        Mesh_criteria criteria(params::facet_angle(30).facet_size(0.1).facet_distance(0.025).
+                cell_radius_edge_ratio(2).cell_size(0.1));
+
+        // Mesh generation
+        C3t3 c3t3 = CGAL::make_mesh_3<C3t3>(domain, criteria);
+
+        // Output
+        std::ofstream medit_file(output);
+        CGAL::IO::write_MEDIT(medit_file, c3t3);
+        medit_file.close();
+    }
+
+    /**
+     * @brief 从多个隐函数中生成四面体网格
+     * @param functions 隐函数集合
+     * @param bounding_sphere 包围球
+     * @param output 输出文件，xxx.mesh
+     */
+    void tetrahedralization_by_implicit_functions(const std::vector<Function>& functions, const K::Sphere_3& bounding_sphere,
+                                                  const std::string& output) {
+        Function_vector v;
+        for(const auto& f : functions) {
+            v.push_back(f);
+        }
+        // Domain (Warning: Sphere_3 constructor uses square radius !)
+        Mesh_domain domain(Function_wrapper(v), K::Sphere_3(CGAL::ORIGIN, CGAL::square(K::FT(5))),
+                           params::relative_error_bound(1e-6));
+
+        // Set mesh criteria
+        Facet_criteria facet_criteria(30, 0.2, 0.02); // angle, size, approximation
+        Cell_criteria cell_criteria(2., 0.4); // radius-edge ratio, size
+        Mesh_criteria criteria(facet_criteria, cell_criteria);
+
+        // Mesh generation
+        C3t3 c3t3 = CGAL::make_mesh_3<C3t3>(domain, criteria, params::no_exude().no_perturb());
+
+        // MeshRefinement Perturbation (maximum cpu time: 10s, targeted dihedral angle: default)
+        CGAL::perturb_mesh_3(c3t3, domain, params::time_limit(10));
+
+        // remove sliver Exudation
+        CGAL::exude_mesh_3(c3t3, params::time_limit(12));
+
+        // Output
+        std::ofstream medit_file(output);
+        CGAL::IO::write_MEDIT(medit_file, c3t3);
+    }
+
+    void tetrahedralization_by_hybrid_domain(const std::string& output) {
+
     }
 
     // 函数：将 .brep 文件转换为 .poly 文件
@@ -196,12 +332,15 @@ namespace cdt {
 
         poly_out << "# Part 2 - facet list" << "\n";
         // 写入面部分
-        poly_out << numFaces << " " <<  0 << "\n";  // 面的数量
+        poly_out << numFaces << " " <<  1 << "\n";  // 面的数量
         for (int i = 0; i < numFaces; ++i) {
             poly_out << 1 << "\n";
             poly_out << faces[i].vertices.size();  // 当前面的顶点数
             for (int vertex : faces[i].vertices) {
                 poly_out << " " << vertex + 1;
+            }
+            if(faces[i].marker != 0) {
+                poly_out << " " << faces[i].marker;
             }
             poly_out << "\n";
         }
@@ -321,10 +460,6 @@ namespace cdt {
             }
         }
 
-
-
-        typedef std::tuple<int, int, int> Triangle; // 用三个顶点索引定义一个三角面
-
         // 用于按顺序比较面，确保可以正确地使用set去重
         struct CompareTriangle {
             bool operator()(const Triangle& a, const Triangle& b) const {
@@ -379,7 +514,82 @@ namespace cdt {
         check_ply(plyFilename);
     }
 
+    /**
+     * @brief 保存网格到文件
+     * @param vertices
+     * @param faces
+     * @param filename
+     * @param formatId
+     */
+    void saveMeshToFile(const std::vector<Vertex>& vertices, const std::vector<Triangle>& faces, const std::string& filename, const std::string& formatId) {
+        Assimp::Exporter exporter;
+        aiScene scene;
+        scene.mRootNode = new aiNode();
+        scene.mMaterials = new aiMaterial*[1];
+        scene.mMaterials[0] = new aiMaterial();
+        scene.mNumMaterials = 1;
+        scene.mMeshes = new aiMesh*[1];
+        scene.mMeshes[0] = new aiMesh();
+        scene.mNumMeshes = 1;
+        scene.mRootNode->mMeshes = new unsigned int[1];
+        scene.mRootNode->mMeshes[0] = 0;
+        scene.mRootNode->mNumMeshes = 1;
 
+        aiMesh* mesh = scene.mMeshes[0];
+        mesh->mMaterialIndex = 0;
+        mesh->mVertices = new aiVector3D[vertices.size()];
+        mesh->mNumVertices = vertices.size();
+        mesh->mFaces = new aiFace[faces.size()];
+        mesh->mNumFaces = faces.size();
+        mesh->mNormals = new aiVector3D[vertices.size()]; // 分配法向量数组
+
+        for (size_t i = 0; i < vertices.size(); ++i) {
+            mesh->mVertices[i] = aiVector3D(vertices[i].x, vertices[i].y, vertices[i].z);
+        }
+
+        for (size_t i = 0; i < faces.size(); ++i) {
+            aiFace& face = mesh->mFaces[i];
+            face.mIndices = new unsigned int[3];
+            face.mNumIndices = 3;
+            face.mIndices[0] = std::get<0>(faces[i]);
+            face.mIndices[1] = std::get<1>(faces[i]);
+            face.mIndices[2] = std::get<2>(faces[i]);
+
+            Vertex v1 = vertices[face.mIndices[0]];
+            Vertex v2 = vertices[face.mIndices[1]];
+            Vertex v3 = vertices[face.mIndices[2]];
+            Vertex edge1 = subtract(v2, v1);
+            Vertex edge2 = subtract(v3, v1);
+            Vertex normal = crossProduct(edge1, edge2);
+            normalize(normal);
+
+            // 将计算出的法向量分配给面的三个顶点
+            mesh->mNormals[face.mIndices[0]] = aiVector3D(normal.x, normal.y, normal.z);
+            mesh->mNormals[face.mIndices[1]] = aiVector3D(normal.x, normal.y, normal.z);
+            mesh->mNormals[face.mIndices[2]] = aiVector3D(normal.x, normal.y, normal.z);
+        }
+
+        aiReturn result = exporter.Export(&scene, formatId, filename);
+        if (result != aiReturn_SUCCESS) {
+            std::cerr << "Assimp error while exporting: " << exporter.GetErrorString() << std::endl;
+        }
+
+        // Cleanup
+        delete[] scene.mRootNode->mMeshes;
+        delete scene.mRootNode;
+        for (unsigned int i = 0; i < scene.mNumMeshes; ++i) {
+            delete[] scene.mMeshes[i]->mVertices;
+            delete[] scene.mMeshes[i]->mNormals;
+            for (unsigned int j = 0; j < scene.mMeshes[i]->mNumFaces; ++j) {
+                delete[] scene.mMeshes[i]->mFaces[j].mIndices;
+            }
+            delete[] scene.mMeshes[i]->mFaces;
+            delete scene.mMeshes[i];
+        }
+        delete[] scene.mMeshes;
+        delete[] scene.mMaterials[0];
+        delete[] scene.mMaterials;
+    }
 }
 
 

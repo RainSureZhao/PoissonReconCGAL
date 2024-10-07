@@ -16,14 +16,18 @@ endif()
 
 find_package(CGAL REQUIRED OPTIONAL_COMPONENTS Qt5)
 find_package(CGAL CONFIG REQUIRED)
+find_package(assimp CONFIG REQUIRED)
+
 
 file(GLOB EXAMPLES "examples/*.h")
 file(GLOB GEOMETRY "geometry/*.h")
+file(GLOB UTILS "utils/*.h" "utils/*.cpp")
 
 add_executable(PoissonReconCGAL
         main.cpp
         ${EXAMPLES}
         ${GEOMETRY}
+        ${UTILS}
 )
 
 add_subdirectory(third_party)
@@ -41,3 +45,4 @@ endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE CGAL::CGAL)
 target_link_libraries(${PROJECT_NAME} PRIVATE TetGen)
+target_link_libraries(${PROJECT_NAME} PRIVATE assimp::assimp)
