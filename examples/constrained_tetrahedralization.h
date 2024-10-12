@@ -136,9 +136,16 @@ namespace cdt {
         // Step 2: 执行受约束四面体剖分
         // "p" 表示从 .poly 文件生成，"C" 表示使用受约束 Delaunay 剖分
         tetgenbehavior behavior;
-        const char* s_const = "pC";
+//        strncpy(behavior.outfilename, output.c_str(), sizeof(behavior.outfilename) - 1);
+//        // 确保字符串以 null 字符结束
+//        behavior.outfilename[sizeof(behavior.outfilename) - 1] = '\0';
+
+        const char* s_const = "pkC";
         char* s = const_cast<char*>(s_const);
         behavior.parse_commandline(s);
+        strncpy(behavior.outfilename, output.c_str(), sizeof(behavior.outfilename) - 1);
+        // 确保字符串以 null 字符结束
+        behavior.outfilename[sizeof(behavior.outfilename) - 1] = '\0';
         tetrahedralize(&behavior, &in, &out);
 
         // Step 3: 将结果保存到输出文件
@@ -191,7 +198,7 @@ namespace cdt {
             v.push_back(f);
         }
         // Domain (Warning: Sphere_3 constructor uses square radius !)
-        Mesh_domain domain(Function_wrapper(v), K::Sphere_3(CGAL::ORIGIN, CGAL::square(K::FT(5))),
+        Mesh_domain domain(Function_wrapper(v), bounding_sphere,
                            params::relative_error_bound(1e-6));
 
         // Set mesh criteria
@@ -211,6 +218,43 @@ namespace cdt {
         // Output
         std::ofstream medit_file(output);
         CGAL::IO::write_MEDIT(medit_file, c3t3);
+    }
+
+    /**
+     * @brief 从隐函数和符号字符串中生成四面体网格
+     * @param functions 隐函数集合
+     * @param signs 符号字符串
+     * @param bounding_sphere 包围球
+     * @param output 输出文件，xxx.mesh
+     */
+    void tetrahedralization_by_implicit_sign_functions(const std::vector<Function>& functions, const std::string& signs, const K::Sphere_3& bounding_sphere,
+                                                       const std::string& output) {
+        Function_vector v;
+        for(const auto& f : functions) {
+            v.push_back(f);
+        }
+        std::vector<std::string> vps;
+        vps.push_back(signs);
+        Mesh_domain domain(Function_wrapper(v, vps), bounding_sphere, params::relative_error_bound(1e-6));
+
+        // Set mesh criteria
+        Facet_criteria facet_criteria(30, 0.2, 0.02); // angle, size, approximation
+        Cell_criteria cell_criteria(2., 0.4); // radius-edge ratio, size
+        Mesh_criteria criteria(facet_criteria, cell_criteria);
+
+        // Mesh generation
+        C3t3 c3t3 = CGAL::make_mesh_3<C3t3>(domain, criteria, params::no_exude().no_perturb());
+
+        // Perturbation (maximum cpu time: 10s, targeted dihedral angle: default)
+        CGAL::perturb_mesh_3(c3t3, domain, params::time_limit(10));
+
+        // Exudation
+        CGAL::exude_mesh_3(c3t3, params::time_limit(12));
+
+        // Output
+        std::ofstream medit_file(output);
+        CGAL::IO::write_MEDIT(medit_file, c3t3);
+        medit_file.close();
     }
 
     void tetrahedralization_by_hybrid_domain(const std::string& output) {
