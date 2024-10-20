@@ -14,7 +14,7 @@ else()
     add_compile_options(-Wa,-mbig-obj)
 endif()
 
-find_package(CGAL REQUIRED OPTIONAL_COMPONENTS Qt5)
+find_package(CGAL REQUIRED OPTIONAL_COMPONENTS Qt6)
 find_package(CGAL CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 
@@ -22,12 +22,14 @@ find_package(assimp CONFIG REQUIRED)
 file(GLOB EXAMPLES "examples/*.h")
 file(GLOB GEOMETRY "geometry/*.h")
 file(GLOB UTILS "utils/*.h" "utils/*.cpp")
+file(GLOB_RECURSE SERVICE "service/*.h" "service/*.cpp")
 
 add_executable(PoissonReconCGAL
         main.cpp
         ${EXAMPLES}
         ${GEOMETRY}
         ${UTILS}
+        ${SERVICE}
 )
 
 add_subdirectory(third_party)

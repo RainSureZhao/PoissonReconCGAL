@@ -26,6 +26,9 @@
 #include <CGAL/Mesh_triangulation_3.h>
 #include <CGAL/Mesh_complex_3_in_triangulation_3.h>
 #include <CGAL/Mesh_criteria_3.h>
+#include <CGAL/Polyhedron_3.h>
+#include <CGAL/Polyhedral_mesh_domain_3.h>
+#include <CGAL/Polyhedral_complex_mesh_domain_3.h>
 
 #include <CGAL/Implicit_to_labeling_function_wrapper.h>
 #include <CGAL/Labeled_mesh_domain_3.h>
@@ -45,6 +48,7 @@ typedef CGAL::Sequential_tag Concurrency_tag;
 
 // Domain
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+typedef CGAL::Polyhedron_3<K> Polyhedron;
 typedef K::FT FT;
 typedef K::Point_3 Point;
 typedef FT_to_point_function_wrapper<double, K::Point_3> Function;
@@ -52,10 +56,15 @@ typedef CGAL::Implicit_multi_domain_to_labeling_function_wrapper<Function>
         Function_wrapper;
 typedef Function_wrapper::Function_vector Function_vector;
 typedef CGAL::Labeled_mesh_domain_3<K> Mesh_domain;
+typedef CGAL::Polyhedral_mesh_domain_3<Polyhedron, K> Polyhedral_Mesh_domain;
+typedef CGAL::Polyhedral_complex_mesh_domain_3<K> Polyhedral_Complex_Mesh_domain;
 
 // Triangulation
 typedef CGAL::Mesh_triangulation_3<Mesh_domain,CGAL::Default,Concurrency_tag>::type Tr;
 typedef CGAL::Mesh_complex_3_in_triangulation_3<Tr> C3t3;
+
+typedef CGAL::Mesh_complex_3_in_triangulation_3<
+        Tr,Polyhedral_Complex_Mesh_domain::Corner_index, Polyhedral_Complex_Mesh_domain::Curve_index> C3t3_Mesh_Complex3;
 
 // Mesh Criteria
 typedef CGAL::Mesh_criteria_3<Tr> Mesh_criteria;
@@ -140,7 +149,7 @@ namespace cdt {
 //        // 确保字符串以 null 字符结束
 //        behavior.outfilename[sizeof(behavior.outfilename) - 1] = '\0';
 
-        const char* s_const = "pkC";
+        const char* s_const = "pYkC";
         char* s = const_cast<char*>(s_const);
         behavior.parse_commandline(s);
         strncpy(behavior.outfilename, output.c_str(), sizeof(behavior.outfilename) - 1);
@@ -257,8 +266,104 @@ namespace cdt {
         medit_file.close();
     }
 
-    void tetrahedralization_by_hybrid_domain(const std::string& output) {
+    /**
+     * @brief 从表面网格生成四面体网格，表面网格必须要是三角网格
+     * @param input 输入文件，xxx.ply xxx.off
+     * @param output 输出文件 xxx.mesh
+     */
+    void tetrahedralization_by_surface_mesh(const std::string& fname, const std::string& output, const std::string& output_refinement) {
+        // Create input polyhedron
+        Polyhedron polyhedron;
+        std::ifstream input(fname);
+        input >> polyhedron;
+        if(input.fail()){
+            std::cerr << "Error: Cannot read file " <<  fname << std::endl;
+            return;
+        }
+        input.close();
 
+        if (!CGAL::is_triangle_mesh(polyhedron)){
+            std::cerr << "Input geometry is not triangulated." << std::endl;
+            return;
+        }
+
+        // Create domain
+        Polyhedral_Mesh_domain domain(polyhedron);
+
+        // Mesh criteria (no cell_size set)
+        Mesh_criteria criteria(params::facet_angle(25).facet_size(0.15).facet_distance(0.008).
+                cell_radius_edge_ratio(3));
+        // Mesh generation
+        C3t3 c3t3 = CGAL::make_mesh_3<C3t3>(domain, criteria, params::no_perturb().no_exude());
+
+        // Output
+        std::ofstream medit_file(output);
+        CGAL::IO::write_MEDIT(medit_file, c3t3);
+        medit_file.close();
+
+        // Set tetrahedron size (keep cell_radius_edge_ratio), ignore facets
+        Mesh_criteria new_criteria(params::cell_radius_edge_ratio(3).cell_size(0.03));
+
+        // Mesh refinement (and make the output manifold)
+        CGAL::refine_mesh_3(c3t3, domain, new_criteria, params::manifold());
+
+        // Output
+        medit_file.open(output_refinement);
+        CGAL::IO::write_MEDIT(medit_file, c3t3);
+        medit_file.close();
+    }
+
+
+    void outputPoly(const std::vector<Vertex>& nodes, const std::vector<Face>& facets, const std::string& output) {
+        std::ofstream out(output);
+        std::vector<Vertex> outputVertex;
+        std::unordered_map<int, int> mp;
+
+        for (const auto& facet : facets) {
+            for (const auto& p : facet.vertices) {
+                if (mp.find(p) == mp.end()) {  // 如果 p 不在 mp 中，说明是新的节点
+                    outputVertex.push_back(nodes[p]);  // 添加到输出顶点列表
+                    mp[p] = outputVertex.size();  // 记录 p 对应的位置
+                }
+            }
+        }
+        // 写入 .poly 文件
+        out << "# .poly file generated from .brep\n";
+        out << "# Part 1 - node list" << "\n";
+        out << "# node count, 3 dim, no attribute, no boundary marker" << "\n";
+        out << outputVertex.size() << " 3 0 0" << std::endl;
+        for (size_t i = 0; i < outputVertex.size(); ++i) {
+            auto& node = outputVertex[i];
+            out << i + 1 << " " << node.x << " " << node.y << " " << node.z << std::endl;
+        }
+        out << "# Part 2 - facet list" << "\n";
+        out << facets.size() << " " <<  1 << "\n";  // 面的数量
+        for (const auto& face : facets) {
+            out << 1 << " " << 0 << ' ' << face.marker << "\n";
+            out << face.vertices.size();  // 当前面的顶点数
+            for (int vertex : face.vertices) {
+                out << " " << mp[vertex];
+            }
+            out << "\n";
+        }
+        out << "# Part 3 - the hole list." << "\n";
+        out << "# There is no hole in bar." << "\n";
+        out << "0" << "\n";
+        out << "# Part 4 - the region list" << "\n";
+        out << "0" << "\n";
+        out.close();
+    }
+
+    void outputPolyByMarkers(const std::vector<Vertex>& nodes, const std::vector<Face>& facets, const std::string& output, const std::vector<int>& markers) {
+        std::vector<Face> outputFaces;
+        std::unordered_set<int> markerSet;
+        for(auto& x : markers) markerSet.insert(x);
+        for(const auto& face : facets) {
+            if(markerSet.contains(face.marker)) {
+                outputFaces.push_back(face);
+            }
+        }
+        outputPoly(nodes, outputFaces, output);
     }
 
     // 函数：将 .brep 文件转换为 .poly 文件
@@ -298,28 +403,34 @@ namespace cdt {
         // 读入marker的数量
         std::istringstream(line) >> numMarkers;
         // horizon的marker
+        std::unordered_set<int> horizonMarkerSet;
         brep_in >> numHorizonMarkers;
         std::vector<int> horizonMarkers(numHorizonMarkers);
         for(int i = 0; i < numHorizonMarkers; i ++) {
             int marker;
             brep_in >> marker;
             horizonMarkers[i] = marker;
+            horizonMarkerSet.insert(marker);
         }
         // fault的marker
         brep_in >> numFaultMarkers;
+        std::unordered_set<int> faultSurfaceMarkerSet;
         std::vector<int> faultMarkers(numFaultMarkers);
         for(int i = 0; i < numFaultMarkers; i ++) {
             int marker;
             brep_in >> marker;
             faultMarkers[i] = marker;
+            faultSurfaceMarkerSet.insert(marker);
         }
         // boundary surface的marker
         brep_in >> numBoundarySurfaceMarkers;
         std::vector<int> boundarySurfaceMarkers(numBoundarySurfaceMarkers);
+        std::unordered_set<int> boundarySurfaceMarkerSet;
         for(int i = 0; i < numBoundarySurfaceMarkers; i ++) {
             int marker;
             brep_in >> marker;
             boundarySurfaceMarkers[i] = marker;
+            boundarySurfaceMarkerSet.insert(marker);
         }
 
         // 读取顶点
@@ -335,6 +446,9 @@ namespace cdt {
         }
 
         // 读取面
+        std::vector<Face> boundarySurfaces;
+        std::vector<Face> faultSurfaces;
+        std::vector<Face> horizonSurfaces;
         std::vector<Face> faces(numFaces);
         for (int i = 0; i < numFaces; ++i) {
             faces[i].vertices.resize(3);
@@ -346,8 +460,12 @@ namespace cdt {
                 brep_in >> faces[i].edges[j];
             }
             brep_in >> faces[i].marker;  // 读取面的标记
+
             brep_in >> faces[i].leftVolumeNumber; // 读取面左侧的体编号
             brep_in >> faces[i].rightVolumeNumber; // 读取面右侧的体编号
+            if(boundarySurfaceMarkerSet.count(faces[i].marker)) boundarySurfaces.push_back(faces[i]);
+            if(faultSurfaceMarkerSet.count(faces[i].marker)) faultSurfaces.push_back(faces[i]);
+            if(horizonMarkerSet.count(faces[i].marker)) horizonSurfaces.push_back(faces[i]);
         }
 
         // 读取区域信息
@@ -367,7 +485,7 @@ namespace cdt {
         poly_out << "# Part 1 - node list" << "\n";
         poly_out << "# node count, 3 dim, no attribute, no boundary marker" << "\n";
 
-        // 写入顶点部分
+        //  写入顶点部分
         poly_out << numVertices << " 3 0 0\n";  // 顶点数、维度、属性数、边界标志数
         for (int i = 0; i < numVertices; ++i) {
             poly_out << i + 1 << " " << vertices[i].x << " " << vertices[i].y << " " << vertices[i].z << "\n";
@@ -375,19 +493,48 @@ namespace cdt {
 
 
         poly_out << "# Part 2 - facet list" << "\n";
-        // 写入面部分
-        poly_out << numFaces << " " <<  1 << "\n";  // 面的数量
-        for (int i = 0; i < numFaces; ++i) {
-            poly_out << 1 << "\n";
-            poly_out << faces[i].vertices.size();  // 当前面的顶点数
-            for (int vertex : faces[i].vertices) {
+        poly_out <<  faces.size() << " " <<  1 << "\n";  // 面的数量
+        for(const auto& face : faces) {
+            poly_out << 1 << " " << 0 << ' ' << 0 << "\n";
+            poly_out << face.vertices.size();  // 当前面的顶点数
+            for (int vertex : face.vertices) {
                 poly_out << " " << vertex + 1;
-            }
-            if(faces[i].marker != 0) {
-                poly_out << " " << faces[i].marker;
             }
             poly_out << "\n";
         }
+        // 写入边界面部分
+//        poly_out <<  boundarySurfaces.size() << " " <<  1 << "\n";  // 面的数量
+//        for (const auto& face : boundarySurfaces) {
+//            poly_out << 1 << " " << 0 << ' ' << face.marker << "\n";
+//            poly_out << face.vertices.size();  // 当前面的顶点数
+//            for (int vertex : face.vertices) {
+//                poly_out << " " << vertex + 1;
+//            }
+//            poly_out << " " << face.marker;
+//            poly_out << "\n";
+//        }
+        // 输出水平面信息
+//        for (const auto& face : horizonSurfaces) {
+//            poly_out << 1 << " " << 0 << ' ' << face.marker << "\n";
+//            poly_out << face.vertices.size();  // 当前面的顶点数
+//            for (int vertex : face.vertices) {
+//                poly_out << " " << vertex + 1;
+//            }
+//            poly_out << " " << face.marker;
+//            poly_out << "\n";
+//        }
+//        for (const auto& face : faultSurfaces) {
+//            poly_out << 1 << " " << 0 << ' ' << face.marker << "\n";
+//            poly_out << face.vertices.size();  // 当前面的顶点数
+//            for (int vertex : face.vertices) {
+//                poly_out << " " << vertex + 1;
+//            }
+//            poly_out << " " << face.marker;
+//
+//            poly_out << "\n";
+//        }
+
+
 
         poly_out << "# Part 3 - the hole list." << "\n";
         poly_out << "# There is no hole in bar." << "\n";
@@ -407,6 +554,12 @@ namespace cdt {
         // 保存并关闭文件
         poly_out.close();
         brep_in.close();
+
+        // outputPolyByMarkers(vertices, faces, poly_file, {100, 101, 103, 104, 105, 107, 108, 109, 110, 1000});
+        // outputPoly(vertices, boundarySurfaces, poly_file + "_boundary.poly");
+        // 102 和 106有问题
+
+        // outputPoly(vertices, faultSurfaces, poly_file);
 
         std::cout << "Conversion complete: " << poly_file << " created from " << brep_file << std::endl;
     }
@@ -634,6 +787,28 @@ namespace cdt {
         delete[] scene.mMaterials[0];
         delete[] scene.mMaterials;
     }
+
+
+    /**
+     * @brief 从 .mesh 文件中读取网格，写入到 .off 文件
+     * @param input
+     * @param output
+     * @deprecated
+     */
+    void convert_mesh_to_ply(const std::string& input, const std::string& output) {
+        std::ifstream in(input);
+        Polyhedron polyhedron;
+
+        if(!in or !(in >> polyhedron)) {
+            std::cerr << "Error reading .mesh file" << std::endl;
+            return;
+        }
+
+        std::ofstream out(output);
+        out << polyhedron;
+        out.close();
+    }
+
 }
 
 
