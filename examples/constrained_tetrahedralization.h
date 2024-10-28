@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <array>
 #include <set>
+#include <iomanip>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/Exporter.hpp>
@@ -72,10 +73,26 @@ typedef Mesh_criteria::Facet_criteria    Facet_criteria;
 typedef Mesh_criteria::Cell_criteria     Cell_criteria;
 
 
+// Function
+FT sphere_function (const Point& p)
+{ return CGAL::squared_distance(p, Point(CGAL::ORIGIN))-1; }
+
 namespace cdt {
     // 定义数据结构
     struct Vertex {
         double x, y, z;
+
+        // 重载等于运算符，用于在unordered_map中比较键
+        bool operator==(const Vertex& other) const {
+            return x == other.x && y == other.y && z == other.z;
+        }
+
+        // 重载小于运算符，用于在std::map中比较键
+        bool operator<(const Vertex& other) const {
+            if (x != other.x) return x < other.x;
+            if (y != other.y) return y < other.y;
+            return z < other.z;
+        }
     };
 
     struct Edge {
@@ -121,6 +138,23 @@ namespace cdt {
         v.y /= length;
         v.z /= length;
     }
+}
+
+// 为 cdt::Vertex 定义一个自定义哈希函数，需要放在 std 命名空间下
+namespace std {
+    template <>
+    struct hash<cdt::Vertex> {
+        std::size_t operator()(const cdt::Vertex& v) const noexcept {
+            std::size_t hx = std::hash<double>{}(v.x);
+            std::size_t hy = std::hash<double>{}(v.y);
+            std::size_t hz = std::hash<double>{}(v.z);
+            return hx ^ (hy << 1) ^ (hz << 2);  // 使用位运算组合散列值
+        }
+    };
+}
+
+namespace cdt {
+
 
 /**
  * @brief Constrained tetrahedralization with Tetgen
@@ -174,8 +208,8 @@ namespace cdt {
      * @param bounding_sphere 包围球
      * @param output 输出文件，xxx.mesh
      */
-    void tetrahedralization_by_implicit_function(const Function& function, const K::Sphere_3& bounding_sphere,
-                                                 const std::string& output) {
+    void tetrahedralization_by_implicit_function(const Function& function, const K::Sphere_3& bounding_sphere = K::Sphere_3(CGAL::ORIGIN, K::FT(2)),
+                                                 const std::string& output = R"(D:/Code/cpp/PoissonReconCGAL/data/output.mesh)") {
         /// [Domain creation] (Warning: Sphere_3 constructor uses squared radius !)
         Mesh_domain domain = Mesh_domain::create_implicit_mesh_domain(function, bounding_sphere);
 
@@ -313,8 +347,7 @@ namespace cdt {
         medit_file.close();
     }
 
-
-    void outputPoly(const std::vector<Vertex>& nodes, const std::vector<Face>& facets, const std::string& output) {
+    void outputPly(const std::vector<Vertex>& nodes, const std::vector<Face>& facets, const std::string& output) {
         std::ofstream out(output);
         std::vector<Vertex> outputVertex;
         std::unordered_map<int, int> mp;
@@ -327,6 +360,58 @@ namespace cdt {
                 }
             }
         }
+        // 写入 .ply 文件
+        out << "ply" << std::endl;
+        out << "format ascii 1.0" << std::endl;
+        out << "element vertex " << outputVertex.size() << std::endl;
+        out << "property float x" << std::endl;
+        out << "property float y" << std::endl;
+        out << "property float z" << std::endl;
+        out << "element face " << facets.size() << std::endl;
+        out << "property list uchar int vertex_index" << std::endl;
+        out << "end_header" << std::endl;
+        for (size_t i = 0; i < outputVertex.size(); ++i) {
+            auto& node = outputVertex[i];
+            out << node.x << " " << node.y << " " << node.z << std::endl;
+        }
+        for (const auto& face : facets) {
+            out << face.vertices.size();
+            for (int vertex : face.vertices) {
+                out << " " << mp[vertex] - 1;
+            }
+            out << std::endl;
+        }
+        out.close();
+    }
+
+    void outputPlyByMarkers(const std::vector<Vertex>& nodes, const std::vector<Face>& facets, const std::string& output, const std::vector<int>& markers) {
+        std::vector<Face> outputFaces;
+        std::unordered_set<int> markerSet;
+        for(auto& x : markers) markerSet.insert(x);
+        for(const auto& face : facets) {
+            if(markerSet.contains(face.marker)) {
+                outputFaces.push_back(face);
+            }
+        }
+        outputPly(nodes, outputFaces, output);
+    }
+
+    void outputPoly(const std::vector<Vertex>& nodes, const std::vector<Face>& facets, const std::string& output) {
+        std::ofstream out(output);
+        std::vector<Vertex> outputVertex;
+        std::unordered_map<Vertex, int> mp;
+        std::unordered_map<int, int> mp1;
+
+        for (const auto& facet : facets) {
+            for (const auto& p : facet.vertices) {
+                const auto& vertex = nodes[p];
+                if (mp.find(vertex) == mp.end()) {  // 如果 p 不在 mp 中，说明是新的节点
+                    outputVertex.push_back(vertex);  // 添加到输出顶点列表
+                    mp[vertex] = outputVertex.size();  // 记录 p 对应的位置
+                }
+                mp1[p] = mp[vertex];
+            }
+        }
         // 写入 .poly 文件
         out << "# .poly file generated from .brep\n";
         out << "# Part 1 - node list" << "\n";
@@ -334,7 +419,7 @@ namespace cdt {
         out << outputVertex.size() << " 3 0 0" << std::endl;
         for (size_t i = 0; i < outputVertex.size(); ++i) {
             auto& node = outputVertex[i];
-            out << i + 1 << " " << node.x << " " << node.y << " " << node.z << std::endl;
+            out << std::fixed << std::setprecision(6) <<  i + 1 << " " << node.x << " " << node.y << " " << node.z << std::endl;
         }
         out << "# Part 2 - facet list" << "\n";
         out << facets.size() << " " <<  1 << "\n";  // 面的数量
@@ -342,7 +427,7 @@ namespace cdt {
             out << 1 << " " << 0 << ' ' << face.marker << "\n";
             out << face.vertices.size();  // 当前面的顶点数
             for (int vertex : face.vertices) {
-                out << " " << mp[vertex];
+                out << " " << mp1[vertex];
             }
             out << "\n";
         }
@@ -555,7 +640,8 @@ namespace cdt {
         poly_out.close();
         brep_in.close();
 
-        // outputPolyByMarkers(vertices, faces, poly_file, {100, 101, 103, 104, 105, 107, 108, 109, 110, 1000});
+//         outputPlyByMarkers(vertices, faces, poly_file + ".ply", {100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 1000});
+        outputPolyByMarkers(vertices, faces, poly_file + ".poly", {100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 1000});
         // outputPoly(vertices, boundarySurfaces, poly_file + "_boundary.poly");
         // 102 和 106有问题
 
