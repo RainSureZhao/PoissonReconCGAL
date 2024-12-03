@@ -209,7 +209,7 @@ namespace cdt {
      * @param output 输出文件，xxx.mesh
      */
     void tetrahedralization_by_implicit_function(const Function& function, const K::Sphere_3& bounding_sphere = K::Sphere_3(CGAL::ORIGIN, K::FT(2)),
-                                                 const std::string& output = R"(D:/Code/cpp/PoissonReconCGAL/data/output.mesh)") {
+                                                 const std::string& output = R"(../data/output.mesh)") {
         /// [Domain creation] (Warning: Sphere_3 constructor uses squared radius !)
         Mesh_domain domain = Mesh_domain::create_implicit_mesh_domain(function, bounding_sphere);
 

@@ -10,6 +10,8 @@ SET(CGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE TRUE)
 # 添加编译器标志
 if(MSVC)
     add_compile_options(/bigobj)
+elseif (APPLE)
+    add_compile_options(-Wl)
 else()
     add_compile_options(-Wa,-mbig-obj)
 endif()
