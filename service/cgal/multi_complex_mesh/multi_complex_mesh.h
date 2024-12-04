@@ -54,7 +54,7 @@ namespace cdt {
     void tetrahedralization_by_surface_meshs(const std::vector<std::string>& meshs_input, const std::vector<std::pair<int, int>>& incident_subdomains, const std::string& output) {
         size_t nb_patches = meshs_input.size();
         std::vector<Polyhedron> patches(nb_patches);
-        assert(meshs_input == incident_subdomains.size());
+        assert(meshs_input.size() == incident_subdomains.size());
         for(std::size_t i = 0; i < nb_patches; ++i) {
             std::ifstream input(CGAL::data_file_path(meshs_input[i]));
             if(!(input >> patches[i])) {

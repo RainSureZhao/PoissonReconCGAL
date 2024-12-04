@@ -85,10 +85,12 @@ namespace cdt {
         domain.detect_features(); //includes detection of borders
 
         std::vector<std::vector<Point> > featured_curves;
-        if (!read_polylines(edges, featured_curves))
-        { // see file "read_polylines.h"
-            std::cerr << "Error: Cannot read file " << edges << std::endl;
-            return;
+        if(!edges.empty()) {
+            if (!read_polylines(edges, featured_curves))
+            { // see file "read_polylines.h"
+                std::cerr << "Error: Cannot read file " << edges << std::endl;
+                return;
+            }
         }
 
         // Add features for protection

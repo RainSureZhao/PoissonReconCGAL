@@ -3,9 +3,9 @@
 //#include "examples/compute_vertex_normal.h"
 //#include "examples/export_mesh.h"
 //#include "examples/extract_point_and_normal.h"
-#include "examples/constrained_tetrahedralization.h"
+// #include "examples/constrained_tetrahedralization.h"
 // #include "service/cgal/multi_complex_mesh/multi_complex_mesh.h"
-// #include "service/cgal/recovery_edges_mesh/recovery_edges_mesh.h"
+#include "service/cgal/recovery_edges_mesh/recovery_edges_mesh.h"
 #include "examples/read_berp.h"
 int main()
 {
@@ -17,13 +17,13 @@ int main()
 //    return result;
     // return 0;
 
-    cdt::tetrahedralization_by_implicit_function(sphere_function);
+//     cdt::tetrahedralization_by_implicit_function(sphere_function);
 
 //     cdt::convert_brep_to_poly(R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock.brep)", R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock)");
 //     cdt::constrained_tetrahedralization_with_tetgen(R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock)", R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock)");
 //     cdt::convertNodeEleToPLY(R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock.node)", R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock.ele)", R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock.ply)");
 
-//     cdt::tetrahedralization_by_surface_mesh(R"(D:\Code\cpp\PoissonReconCGAL\data\fwk_triangles_2.off)", R"(D:\Code\cpp\PoissonReconCGAL\data\fwk_triangles_2.mesh)", R"(D:\Code\cpp\PoissonReconCGAL\data\fwk_triangles_2_refinement.mesh)");
+//      cdt::tetrahedralization_by_surface_mesh(R"(D:\Code\cpp\PoissonReconCGAL\data\fwk_triangles_2.off)", R"(D:\Code\cpp\PoissonReconCGAL\data\fwk_triangles_2.mesh)", R"(D:\Code\cpp\PoissonReconCGAL\data\fwk_triangles_2_refinement.mesh)");
 
 //    std::vector<std::string> surfaces {
 //        R"(D:\Code\cpp\PoissonReconCGAL\data\model_0.off)",
@@ -37,7 +37,15 @@ int main()
 //            {0, 1},
 //            {0, 1}
 //    };
-//    cdt::recovery_edges_from_surface(surfaces, indicies, R"(D:\Code\cpp\PoissonReconCGAL\data\polylines.txt)", R"(D:\Code\cpp\PoissonReconCGAL\data\model.mesh)");
+
+    std::vector<std::string> surfaces {
+        R"(D:\Code\cpp\PoissonReconCGAL\data\cube_2.off)"
+    };
+    std::vector<std::pair<int, int>> indicies {
+            {0, 1}
+    };
+    std::string edges = "";
+    cdt::recovery_edges_from_surface(surfaces, indicies, edges, R"(D:\Code\cpp\PoissonReconCGAL\data\cube_2_edges.mesh)");
 
 //     cdt::convert_brep_to_poly(R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock.brep)", R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock.poly)");
 //     cdt::constrained_tetrahedralization_with_tetgen(R"(D:\Code\cpp\PoissonReconCGAL\data\cuboid)", R"(D:\Code\cpp\PoissonReconCGAL\data\cuboid)");
