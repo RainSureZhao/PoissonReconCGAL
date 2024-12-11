@@ -97,9 +97,9 @@ namespace cdt {
         domain.add_features(featured_curves.begin(), featured_curves.end());
 
         // Criteria
-        Edge_criteria edge_criteria(0.08);
-        Facet_criteria facet_criteria(30, 0.08, 0.025); // angle, size, approximation
-        Cell_criteria cell_criteria(2, 0.1); // radius-edge ratio, size
+        Edge_criteria edge_criteria(0.8);
+        Facet_criteria facet_criteria(30, 80, 2.5); // angle, size, approximation
+        Cell_criteria cell_criteria(2, 100); // radius-edge ratio, size
         Mesh_criteria criteria(edge_criteria, facet_criteria, cell_criteria);
 
         // Mesh generation (without optimization)

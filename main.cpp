@@ -25,27 +25,84 @@ int main()
 
 //      cdt::tetrahedralization_by_surface_mesh(R"(D:\Code\cpp\PoissonReconCGAL\data\fwk_triangles_2.off)", R"(D:\Code\cpp\PoissonReconCGAL\data\fwk_triangles_2.mesh)", R"(D:\Code\cpp\PoissonReconCGAL\data\fwk_triangles_2_refinement.mesh)");
 
-//    std::vector<std::string> surfaces {
-//        R"(D:\Code\cpp\PoissonReconCGAL\data\model_0.off)",
-//        R"(D:\Code\cpp\PoissonReconCGAL\data\model_1.off)",
-//        R"(D:\Code\cpp\PoissonReconCGAL\data\model_2.off)",
+    std::vector<std::string> surfaces {
+        R"(D:\Code\cpp\PoissonReconCGAL\data\model_0.off)",
+        R"(D:\Code\cpp\PoissonReconCGAL\data\model_1.off)",
+        R"(D:\Code\cpp\PoissonReconCGAL\data\model_2.off)"
 //        R"(D:\Code\cpp\PoissonReconCGAL\data\model_3.off)"
+    };
+    std::vector<std::pair<int, int>> indices {
+            {0, 0},
+            {1, 0},
+            {0, 1}
+//             {1, 1}
+    };
+    std::string edges = "";
+    cdt::recovery_edges_from_surface(surfaces, indices, edges,  R"(D:\Code\cpp\PoissonReconCGAL\data\model.mesh)");
+
+
+    std::vector<std::string> inputs {
+        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_boundary.poly)",
+        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_horizon_100.poly)",
+        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_horizon_101.poly)",
+        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_horizon_102.poly)",
+        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_horizon_103.poly)",
+        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_horizon_104.poly)",
+        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_105.poly)",
+        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_106.poly)",
+        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_107.poly)",
+        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_108.poly)",
+        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_109.poly)",
+        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_110.poly)",
+    };
+
+//    std::vector<std::string> outputs {
+//        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_boundary.off)",
+//        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_horizon_100.off)",
+//        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_horizon_101.off)",
+//        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_horizon_102.off)",
+//        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_horizon_103.off)",
+//        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_horizon_104.off)"
+////        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_105.off)",
+////        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_106.off)",
+////        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_107.off)",
+////        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_108.off)",
+////        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_109.off)",
+////        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_110.off)",
 //    };
+//
+////     cdt::multi_convert_poly_to_off(inputs, outputs);
+//
+//
+////    std::vector<std::string> surfaces {
+////        R"(D:\Code\cpp\PoissonReconCGAL\data\fwk_triangles.off)"
+////    };
 //    std::vector<std::pair<int, int>> indicies {
 //            {0, 1},
 //            {0, 1},
 //            {0, 1},
+//            {0, 1},
+//            {0, 1},
 //            {0, 1}
+////            {0, 1},
+////            {0, 1},
+////            {0, 1},
+////            {0, 1},
+////            {0, 1},
+////            {0, 1}
 //    };
+//    std::string edges = "";
+//    cdt::recovery_edges_from_surface(outputs, indicies, edges, R"(D:\Code\cpp\PoissonReconCGAL\data\cube_2_edges.mesh)");
 
-    std::vector<std::string> surfaces {
-        R"(D:\Code\cpp\PoissonReconCGAL\data\cube_2.off)"
-    };
-    std::vector<std::pair<int, int>> indicies {
-            {0, 1}
-    };
-    std::string edges = "";
-    cdt::recovery_edges_from_surface(surfaces, indicies, edges, R"(D:\Code\cpp\PoissonReconCGAL\data\cube_2_edges.mesh)");
+    // cube_2
+//    std::vector<std::string> surfaces {
+//        R"(D:\Code\cpp\PoissonReconCGAL\data\cube_2_without_normal.off)"
+//    };
+//    std::vector<std::pair<int, int>> indices {
+//        {0, 1},
+//    };
+//    std::string edges = "";
+//    cdt::recovery_edges_from_surface(surfaces, indices, edges,  R"(D:\Code\cpp\PoissonReconCGAL\data\cube_2_without_normal_edges.mesh)");
 
 //     cdt::convert_brep_to_poly(R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock.brep)", R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock.poly)");
 //     cdt::constrained_tetrahedralization_with_tetgen(R"(D:\Code\cpp\PoissonReconCGAL\data\cuboid)", R"(D:\Code\cpp\PoissonReconCGAL\data\cuboid)");

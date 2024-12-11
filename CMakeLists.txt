@@ -17,6 +17,9 @@ endif()
 find_package(CGAL REQUIRED OPTIONAL_COMPONENTS Qt6)
 find_package(CGAL CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
+find_package(OpenMP REQUIRED)
+
+
 
 
 file(GLOB EXAMPLES "examples/*.h")
@@ -44,6 +47,11 @@ if(CGAL_Qt5_FOUND)
 else()
     message(STATUS "NOTICE: Several examples require Qt5 and will not be compiled.")
 endif()
+
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
 
 target_link_libraries(${PROJECT_NAME} PRIVATE CGAL::CGAL)
 target_link_libraries(${PROJECT_NAME} PRIVATE TetGen)

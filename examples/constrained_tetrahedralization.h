@@ -895,6 +895,135 @@ namespace cdt {
         out.close();
     }
 
+
+    /**
+     * @brief 将.poly文件转换成off文件
+     * @param input
+     * @param output
+     */
+    void convert_poly_to_off(const std::string& input, const std::string& output) {
+        std::ifstream in(input);
+        std::ofstream out(output);
+
+        // read .poly file
+        std::vector<Vertex> nodes;
+        std::vector<Face> facets;
+        std::unordered_map<Vertex, int> nodeMap;
+        std::unordered_map<int, int> facetMap;
+
+        std::string line;
+        bool readingNodes = false, readingFacets = false;
+        bool readingFacetNum = false, readingSimplexNum = false, readingPolygon = false;
+        bool readingNodeNum = false;
+        int facetNum, hasMarker;
+        int simplexNum, hasHole, marker;
+
+        while(std::getline(in, line)) {
+            if(line.find("# Part 1 - node list") != std::string::npos) {
+                readingNodes = true;
+                readingNodeNum = true;
+                readingFacets = false;
+                continue;
+            }
+            if(line.find("# Part 2 - facet list") != std::string::npos) {
+                readingNodes = false;
+                readingFacets = true;
+                readingFacetNum = true;
+                continue;
+            }
+            if(line.find("#") != std::string::npos) continue;
+
+            if(readingNodes) {
+                if(line.find("# node count") != std::string::npos) continue;
+
+                std::istringstream ss(line);
+                if(readingNodeNum) {
+                    readingNodeNum = false;
+                    int nodeNum, dim, attr, boundaryMarker;
+                    ss >> nodeNum >> dim >> attr >> boundaryMarker;
+                    continue;
+                }
+                int id;
+                double x, y, z;
+                ss >> id >> x >> y >> z;
+
+                Vertex v = {x, y, z};
+                nodes.push_back(v);
+//                if(nodeMap.find(v) == nodeMap.end()) {
+//                    nodeMap[v] = nodes.size();
+//                    nodes.push_back(v);
+//                }
+            }
+
+            if(readingFacets) {
+                std::stringstream ss(line);
+                if(readingFacetNum) {
+                    readingFacetNum = false;
+                    ss >> facetNum >> hasMarker;
+                    readingSimplexNum = true;
+                }
+                else if(readingSimplexNum) {
+                    readingSimplexNum = false;
+                    ss >> simplexNum >> hasHole >> marker;
+                    readingPolygon = true;
+                }
+                else if(readingPolygon) {
+                    // std::cout << line << std::endl;
+                    readingPolygon = false;
+                    Face face;
+                    face.marker = marker;
+                    int vertexNum;
+                    ss >> vertexNum;
+                    for(int i = 0; i < vertexNum; i ++) {
+                        int vertexIndex;
+                        ss >> vertexIndex;
+                        face.vertices.push_back(vertexIndex - 1);
+                    }
+                    ss >> face.marker;
+                    if(!face.vertices.empty()) facets.push_back(face);
+                    readingSimplexNum = true;
+                } else {
+                    std::cerr << "Error: Invalid .poly file format." << std::endl;
+                }
+            }
+        }
+
+
+        // 输出 .off 文件
+        out << "OFF\n";
+        out << nodes.size() << " " << facets.size() << " 0\n";
+
+        // 输出节点数据
+        for (const auto& node : nodes) {
+            out << std::fixed << std::setprecision(6) << node.x << " " << node.y << " " << node.z << "\n";
+        }
+
+        // 输出面数据
+        for (const auto& facet : facets) {
+            // if(facet.vertices.empty()) continue;
+            out << facet.vertices.size();
+            for (int vertexIndex : facet.vertices) {
+                out << " " << vertexIndex;
+            }
+            out << "\n";
+        }
+
+        in.close();
+        out.close();
+    }
+
+    void multi_convert_poly_to_off(const std::vector<std::string>& inputs, const std::vector<std::string>& outputs) {
+        if(inputs.size() != outputs.size()) {
+            std::cerr << "Error: The number of input files does not match the number of output files." << std::endl;
+            return;
+        }
+
+#pragma omp parallel for
+        for(int i = 0; i < inputs.size(); i ++) {
+            convert_poly_to_off(inputs[i], outputs[i]);
+        }
+    }
+
 }
 
 
