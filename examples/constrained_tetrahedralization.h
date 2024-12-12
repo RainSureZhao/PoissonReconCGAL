@@ -895,6 +895,43 @@ namespace cdt {
         out.close();
     }
 
+    /**
+     * @brief 获取重复的顶点
+     * @param vertices_input 输入的网格，分别为off文件的路径
+     * @param output 输出的结果，为off文件的路径
+     */
+    void get_duplicate_vertices(const std::vector<std::string>& vertices_input, const std::string& output) {
+
+        std::ofstream out(output);
+        std::vector<Vertex> result;
+        std::unordered_set<Vertex> vertex_set;
+        std::unordered_set<Vertex> duplicate_vertex_set;
+        for (const auto& input : vertices_input) {
+            std::ifstream in(input);
+            Polyhedron polyhedron;
+            if(!in or!(in >> polyhedron)) {
+                std::cerr << "Error reading.mesh file" << std::endl;
+                return;
+            }
+            std::vector<Vertex> vertices;
+            for(auto it = polyhedron.vertices_begin(); it != polyhedron.vertices_end(); ++it) {
+                auto vertex = *it;
+                Vertex tmp = {vertex.point().x(), vertex.point().y(), vertex.point().z()};
+                if(!vertex_set.contains(tmp)) {
+                    vertex_set.insert(tmp);
+                } else {
+                    if(duplicate_vertex_set.contains(tmp)) continue;
+                    duplicate_vertex_set.insert(tmp);
+                    result.emplace_back(tmp);
+                }
+            }
+        }
+        for(const auto& vertex : result) {
+            out << vertex.x << " " << vertex.y << " " << vertex.z << std::endl;
+        }
+        out.close();
+    }
+
 }
 
 

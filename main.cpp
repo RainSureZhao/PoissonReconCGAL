@@ -3,9 +3,9 @@
 //#include "examples/compute_vertex_normal.h"
 //#include "examples/export_mesh.h"
 //#include "examples/extract_point_and_normal.h"
-// #include "examples/constrained_tetrahedralization.h"
+#include "examples/constrained_tetrahedralization.h"
 // #include "service/cgal/multi_complex_mesh/multi_complex_mesh.h"
-#include "service/cgal/recovery_edges_mesh/recovery_edges_mesh.h"
+// #include "service/cgal/recovery_edges_mesh/recovery_edges_mesh.h"
 #include "examples/read_berp.h"
 int main()
 {
@@ -56,18 +56,18 @@ int main()
         R"(../data/patch-23.off)",
         R"(../data/patch-30.off)"
     };
-    std::vector<std::pair<int, int>> indicies {
-                    {0, 1},
-        {1, 3},
-        {2, 0},
-        {2, 1},
-        {2, 3},
-        {3, 0}
-    };
-    std::string edges = "";
-    cdt::recovery_edges_from_surface(surfaces, indicies, edges, R"(../data/patch_v2.mesh)");
+    // std::vector<std::pair<int, int>> indicies {
+    //                 {0, 1},
+    //     {1, 3},
+    //     {2, 0},
+    //     {2, 1},
+    //     {2, 3},
+    //     {3, 0}
+    // };
+    // std::string edges = "";
+    // cdt::recovery_edges_from_surface(surfaces, indicies, edges, R"(../data/patch_v2.mesh)");
 
-
+    cdt::get_duplicate_vertices(surfaces, R"(../data/test.xyz)");
 
 //     cdt::convert_brep_to_poly(R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock.brep)", R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock.poly)");
 //     cdt::constrained_tetrahedralization_with_tetgen(R"(D:\Code\cpp\PoissonReconCGAL\data\cuboid)", R"(D:\Code\cpp\PoissonReconCGAL\data\cuboid)");
