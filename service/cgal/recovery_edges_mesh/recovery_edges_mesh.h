@@ -77,6 +77,10 @@ namespace cdt {
                 return;
             }
         }
+        // for(auto& p : patches) {
+        //     auto edge = edges(p);
+        //     auto face = faces(p);
+        // }
 
         // Create domain
         Mesh_domain domain(patches.begin(), patches.end(),
@@ -85,19 +89,21 @@ namespace cdt {
         domain.detect_features(); //includes detection of borders
 
         std::vector<std::vector<Point> > featured_curves;
-        if (!read_polylines(edges, featured_curves))
-        { // see file "read_polylines.h"
-            std::cerr << "Error: Cannot read file " << edges << std::endl;
-            return;
+        if(!edges.empty()) {
+            if (!read_polylines(edges, featured_curves))
+            { // see file "read_polylines.h"
+                std::cerr << "Error: Cannot read file " << edges << std::endl;
+                return;
+            }
         }
 
         // Add features for protection
         domain.add_features(featured_curves.begin(), featured_curves.end());
 
         // Criteria
-        Edge_criteria edge_criteria(0.08);
-        Facet_criteria facet_criteria(30, 0.08, 0.025); // angle, size, approximation
-        Cell_criteria cell_criteria(2, 0.1); // radius-edge ratio, size
+        Edge_criteria edge_criteria(0.8);
+        Facet_criteria facet_criteria(25, 0.8, 0.2); // angle, size, approximation
+        Cell_criteria cell_criteria(3, 1); // radius-edge ratio, size
         Mesh_criteria criteria(edge_criteria, facet_criteria, cell_criteria);
 
         // Mesh generation (without optimization)
