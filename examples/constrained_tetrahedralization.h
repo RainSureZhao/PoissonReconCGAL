@@ -142,13 +142,20 @@ namespace cdt {
 
 // 为 cdt::Vertex 定义一个自定义哈希函数，需要放在 std 命名空间下
 namespace std {
+    std::size_t hash_combine(std::size_t seed, std::size_t value) {
+        return seed ^ (value + 0x9e3779b9 + (seed << 6) + (seed >> 2));
+    }
     template <>
     struct hash<cdt::Vertex> {
         std::size_t operator()(const cdt::Vertex& v) const noexcept {
             std::size_t hx = std::hash<double>{}(v.x);
             std::size_t hy = std::hash<double>{}(v.y);
             std::size_t hz = std::hash<double>{}(v.z);
-            return hx ^ (hy << 1) ^ (hz << 2);  // 使用位运算组合散列值
+            std::size_t seed = 0;
+            seed = hash_combine(seed, hx);
+            seed = hash_combine(seed, hy);
+            seed = hash_combine(seed, hz);
+            return seed;
         }
     };
 }
@@ -1022,6 +1029,43 @@ namespace cdt {
         for(int i = 0; i < inputs.size(); i ++) {
             convert_poly_to_off(inputs[i], outputs[i]);
         }
+    }
+
+    /**
+    * @brief 获取重复的顶点
+    * @param vertices_input 输入的网格，分别为off文件的路径
+    * @param output 输出的结果，为off文件的路径
+    */
+    void get_duplicate_vertices(const std::vector<std::string>& vertices_input, const std::string& output) {
+
+        std::ofstream out(output);
+        std::vector<Vertex> result;
+        std::unordered_set<Vertex> vertex_set;
+        std::unordered_set<Vertex> duplicate_vertex_set;
+        for (const auto& input : vertices_input) {
+            std::ifstream in(input);
+            Polyhedron polyhedron;
+            if(!in or!(in >> polyhedron)) {
+                std::cerr << "Error reading.mesh file" << std::endl;
+                return;
+            }
+            std::vector<Vertex> vertices;
+            for(auto it = polyhedron.vertices_begin(); it != polyhedron.vertices_end(); ++it) {
+                auto vertex = *it;
+                Vertex tmp = {vertex.point().x(), vertex.point().y(), vertex.point().z()};
+                if(!vertex_set.contains(tmp)) {
+                    vertex_set.insert(tmp);
+                } else {
+                    if(duplicate_vertex_set.contains(tmp)) continue;
+                    duplicate_vertex_set.insert(tmp);
+                    result.emplace_back(tmp);
+                }
+            }
+        }
+        for(const auto& vertex : result) {
+            out << vertex.x << " " << vertex.y << " " << vertex.z << std::endl;
+        }
+        out.close();
     }
 
 }
