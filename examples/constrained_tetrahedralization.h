@@ -1173,6 +1173,15 @@ namespace cdt {
             remove_duplicate_vertices(input[i], output[i]);
         }
     }
+
+    /**
+     * @brief 利用断层面使地层面成为完整的
+     * @param surface_input
+     * @param fault_inputs
+     */
+    void get_sealed_surface(const std::string& surface_input, const std::vector<std::string>& fault_inputs) {
+
+    }
 }
 
 
