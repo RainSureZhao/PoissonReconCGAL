@@ -39,6 +39,8 @@
 
 // IO
 #include <CGAL/IO/File_medit.h>
+#include "code/solve_intersections.h"
+#include "code/io_functions.h"
 
 namespace params = CGAL::parameters;
 
@@ -1181,6 +1183,30 @@ namespace cdt {
      */
     void get_sealed_surface(const std::string& surface_input, const std::vector<std::string>& fault_inputs) {
 
+    }
+
+    /**
+     * @brief 求交
+     * @param filename
+     * @param output
+     */
+    void get_intersections(const std::string& filename, const std::string& output) {
+        std::vector<double> in_coords, out_coords;
+        std::vector<uint> in_tris, out_tris;
+        std::vector<genericPoint*> gen_points;
+        point_arena arena;
+
+        load(filename, in_coords, in_tris);
+
+        /*-------------------------------------------------------------------
+         * There are 4 versions of the solveIntersections function. Please
+         * refer to the solve_intersections.h file to see how to use them. */
+
+        solveIntersections(in_coords, in_tris, arena, gen_points, out_tris);
+
+        computeApproximateCoordinates(gen_points, out_coords);
+
+        save(output, out_coords, out_tris);
     }
 }
 

@@ -36,6 +36,11 @@ TEST(RemoveDuplicatePointsTest, RemoveDuplicatePointsForLayerBlock) {
     EXPECT_NO_THROW(cdt::multi_remove_duplicate_vertices(inputs, outputs));
 }
 
+
+TEST(solveIntersectionsTest, solveIntersectionsTest){
+    EXPECT_NO_THROW(cdt::get_intersections(R"(../third_party/FastAndRobustMeshArrangements/data/two_spheres.stl)", R"(../data/two_spheres_intersection.obj)"));
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

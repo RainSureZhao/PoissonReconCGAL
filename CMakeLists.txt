@@ -67,6 +67,7 @@ add_executable(Tests ${TESTS})
 target_include_directories(Tests PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/third_party/Tetgen
+        ${CMAKE_CURRENT_SOURCE_DIR}/third_party/FastAndRobustMeshArrangements
 )
 if(CGAL_Qt5_FOUND)
     target_link_libraries(Tests PUBLIC CGAL::CGAL_Basic_viewer)
