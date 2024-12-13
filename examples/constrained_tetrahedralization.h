@@ -1016,6 +1016,15 @@ namespace cdt {
             remove_duplicate_vertices(input[i], output[i]);
         }
     }
+
+    /**
+     * @brief 将被断层面插入的地层面构造成一个封闭完整的面
+     * @param horizon_surface 输入的地层面
+     * @param faults 输入的各个断层面
+     */
+    void generate_sealed_surface(const std::string& horizon_surface, const std::vector<std::string>& faults) {
+
+    }
 }
 
 
