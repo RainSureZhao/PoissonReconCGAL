@@ -989,7 +989,6 @@ namespace cdt {
         }
         for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
             const aiMesh *mesh = scene->mMeshes[i];
-            out << mesh->mNumVertices << " ";
             // 遍历每个面
             for(unsigned int j = 0; j < mesh->mNumFaces; j++) {
                 const aiFace &face = mesh->mFaces[j];
