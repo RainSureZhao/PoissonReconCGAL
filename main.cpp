@@ -48,14 +48,14 @@ int main()
     // std::string edges = "";
     // cdt::recovery_edges_from_surface(surfaces, indicies, edges, R"(../data/cube_2.mesh)");
 
-    std::vector<std::string> surfaces {
-        R"(../data/patch-01.off)",
-        R"(../data/patch-13.off)",
-        R"(../data/patch-20.off)",
-        R"(../data/patch-21.off)",
-        R"(../data/patch-23.off)",
-        R"(../data/patch-30.off)"
-    };
+    // std::vector<std::string> surfaces {
+    //     R"(../data/patch-01.off)",
+    //     R"(../data/patch-13.off)",
+    //     R"(../data/patch-20.off)",
+    //     R"(../data/patch-21.off)",
+    //     R"(../data/patch-23.off)",
+    //     R"(../data/patch-30.off)"
+    // };
     // std::vector<std::pair<int, int>> indicies {
     //                 {0, 1},
     //     {1, 3},
@@ -67,7 +67,37 @@ int main()
     // std::string edges = "";
     // cdt::recovery_edges_from_surface(surfaces, indicies, edges, R"(../data/patch_v2.mesh)");
 
-    cdt::get_duplicate_vertices(surfaces, R"(../data/test.xyz)");
+//     cdt::get_duplicate_vertices(surfaces, R"(../data/test.xyz)");
+
+    std::vector<std::string> inputs {
+        R"(../data/layerblock_boundary.off)",
+        R"(../data/layerblock_horizon_100.off)",
+        R"(../data/layerblock_horizon_101.off)",
+        R"(../data/layerblock_horizon_102.off)",
+        R"(../data/layerblock_horizon_103.off)",
+        R"(../data/layerblock_horizon_104.off)",
+        R"(../data/layerblock_fault_105.off)",
+        R"(../data/layerblock_fault_106.off)",
+        R"(../data/layerblock_fault_107.off)",
+        R"(../data/layerblock_fault_108.off)",
+        R"(../data/layerblock_fault_109.off)",
+        R"(../data/layerblock_fault_110.off)"
+    };
+    std::vector<std::string> outputs {
+        R"(../data/layerblock_boundary_processed.off)",
+        R"(../data/layerblock_horizon_100_processed.off)",
+        R"(../data/layerblock_horizon_101_processed.off)",
+        R"(../data/layerblock_horizon_102_processed.off)",
+        R"(../data/layerblock_horizon_103_processed.off)",
+        R"(../data/layerblock_horizon_104_processed.off)",
+        R"(../data/layerblock_fault_105_processed.off)",
+        R"(../data/layerblock_fault_106_processed.off)",
+        R"(../data/layerblock_fault_107_processed.off)",
+        R"(../data/layerblock_fault_108_processed.off)",
+        R"(../data/layerblock_fault_109_processed.off)",
+        R"(../data/layerblock_fault_110_processed.off)"
+    };
+    cdt::multi_remove_duplicate_vertices(inputs, outputs);
 
 //     cdt::convert_brep_to_poly(R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock.brep)", R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock.poly)");
 //     cdt::constrained_tetrahedralization_with_tetgen(R"(D:\Code\cpp\PoissonReconCGAL\data\cuboid)", R"(D:\Code\cpp\PoissonReconCGAL\data\cuboid)");
