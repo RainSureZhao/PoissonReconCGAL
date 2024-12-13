@@ -95,20 +95,20 @@ int main()
 
 
     std::vector<std::string> outputs {
-        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_boundary.off)",
-        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_horizon_100.off)",
-        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_horizon_101.off)",
+        // R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_boundary.off)",
+        // R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_horizon_100.off)",
+        // R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_horizon_101.off)",
         R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_horizon_102.off)",
-        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_horizon_103.off)",
-        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_horizon_104.off)",
-        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_105.off)",
-        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_106.off)",
-        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_107.off)",
-        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_108.off)",
-        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_109.off)",
-        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_110.off)",
+        // R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_horizon_103.off)",
+        // R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_horizon_104.off)",
+        R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_105.off)"
+        // R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_106.off)",
+        // R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_107.off)",
+        // R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_108.off)",
+        // R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_109.off)",
+        // R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_110.off)",
     };
-    cdt::get_duplicate_vertices(outputs, R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_duplicate_vertices.xyz)");
+    cdt::get_duplicate_vertices(outputs, R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_duplicate_vertices_102_105.xyz)");
 //
 ////     cdt::multi_convert_poly_to_off(inputs, outputs);
 //

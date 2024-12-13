@@ -15,6 +15,7 @@
 #include <array>
 #include <set>
 #include <iomanip>
+#include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/Exporter.hpp>
@@ -1043,24 +1044,51 @@ namespace cdt {
         std::unordered_set<Vertex> vertex_set;
         std::unordered_set<Vertex> duplicate_vertex_set;
         for (const auto& input : vertices_input) {
-            std::ifstream in(input);
-            Polyhedron polyhedron;
-            if(!in or!(in >> polyhedron)) {
-                std::cerr << "Error reading.mesh file" << std::endl;
+            Assimp::Importer importer;
+            const aiScene* scene = importer.ReadFile(input, aiProcess_Triangulate);
+            if(!scene or !scene->HasMeshes()) {
+                std::cerr << "Error reading file: " << input << std::endl;
                 return;
             }
-            std::vector<Vertex> vertices;
-            for(auto it = polyhedron.vertices_begin(); it != polyhedron.vertices_end(); ++it) {
-                auto vertex = *it;
-                Vertex tmp = {vertex.point().x(), vertex.point().y(), vertex.point().z()};
-                if(!vertex_set.contains(tmp)) {
-                    vertex_set.insert(tmp);
-                } else {
-                    if(duplicate_vertex_set.contains(tmp)) continue;
-                    duplicate_vertex_set.insert(tmp);
-                    result.emplace_back(tmp);
+            int cnt = 0;
+            for(unsigned int meshIdx = 0; meshIdx < scene->mNumMeshes; meshIdx ++) {
+                const aiMesh* mesh = scene->mMeshes[meshIdx];
+                // Extract points (vertices)
+                for (unsigned int i = 0; i < mesh->mNumVertices; ++i) {
+                    cnt ++;
+                    auto point = mesh->mVertices[i];
+                    Vertex tmp = {point[0], point[1], point[2]};
+                    if(!vertex_set.contains(tmp)) {
+                        vertex_set.insert(tmp);
+                    } else {
+                        if(duplicate_vertex_set.contains(tmp)) continue;
+                        duplicate_vertex_set.insert(tmp);
+                        result.emplace_back(tmp);
+                    }
                 }
             }
+            std::cout << "points size = " << cnt << std::endl;
+
+//            std::ifstream in(input);
+//            Polyhedron polyhedron;
+//            if(!in or!(in >> polyhedron)) {
+//                std::cerr << "Error reading.mesh file" << std::endl;
+//                return;
+//            }
+//            int cnt = 0;
+//            for(auto it = polyhedron.vertices_begin(); it != polyhedron.vertices_end(); ++it) {
+//                cnt ++;
+//                auto vertex = *it;
+//                Vertex tmp = {vertex.point().x(), vertex.point().y(), vertex.point().z()};
+//                if(!vertex_set.contains(tmp)) {
+//                    vertex_set.insert(tmp);
+//                } else {
+//                    if(duplicate_vertex_set.contains(tmp)) continue;
+//                    duplicate_vertex_set.insert(tmp);
+//                    result.emplace_back(tmp);
+//                }
+//            }
+//            std::cout << "points size = " << cnt << std::endl;
         }
         for(const auto& vertex : result) {
             out << vertex.x << " " << vertex.y << " " << vertex.z << std::endl;
