@@ -1096,6 +1096,83 @@ namespace cdt {
         out.close();
     }
 
+
+    /**
+    * @
+    * @param input
+    * @param output
+    */
+    void remove_duplicate_vertices(const std::string& input, const std::string& output) {
+        std::ofstream out(output);
+        std::vector<Vertex> result;
+        std::unordered_set<Vertex> vertex_set;
+        std::unordered_map<Vertex, int> mp;
+
+        Assimp::Importer importer;
+        int idx = 0;
+
+        // 读取模型文件，替换为您的 OBJ 文件路径
+        const aiScene* scene = importer.ReadFile(input, aiProcess_Triangulate);
+        if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
+            std::cerr << "Error reading .mesh file" << std::endl;
+            return;
+        }
+        // 遍历模型中的每个网格// 输出模型的基本信息
+        std::cout << "Model has " << scene->mNumMeshes << " meshes." << std::endl;
+        unsigned int faceNum = 0;
+        for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
+            const aiMesh *mesh = scene->mMeshes[i];
+            faceNum += mesh->mNumFaces;
+            std::cout << "Mesh " << i << " has " << mesh->mNumVertices << " vertices." << std::endl;
+            std::cout << "Mesh " << i << " has " << mesh->mNumFaces << " faces." << std::endl;
+            for (unsigned int j = 0; j < mesh->mNumVertices; j++) {
+                aiVector3D vertex = mesh->mVertices[j];
+                if(Vertex tmp = {vertex.x, vertex.y, vertex.z}; !vertex_set.contains(tmp)) {
+                    vertex_set.insert(tmp);
+                    result.emplace_back(tmp);
+                    if(mp.contains(tmp)) {
+                        throw std::runtime_error("Vertex already exists");
+                    }
+                    mp[tmp] = idx ++;
+                }
+            }
+        }
+
+        // 输出到off文件
+        out << "OFF" << std::endl;
+        out << result.size() << " " << faceNum << " 0" << std::endl;
+        for (const auto& vertex : result) {
+            out << vertex.x << " " << vertex.y << " " << vertex.z << std::endl;
+        }
+        for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
+            const aiMesh *mesh = scene->mMeshes[i];
+            // 遍历每个面
+            for(unsigned int j = 0; j < mesh->mNumFaces; j++) {
+                const aiFace &face = mesh->mFaces[j];
+                // std::cout << "Face " << j << " has " << face.mNumIndices << " indices." << std::endl;
+                out << face.mNumIndices << " ";
+                for(unsigned int k = 0; k < face.mNumIndices; k++) {
+                    unsigned int vertexID = face.mIndices[k];
+                    aiVector3D vertex = mesh->mVertices[vertexID];
+                    out << mp[{vertex.x, vertex.y, vertex.z}] << " ";
+                }
+                out << std::endl;
+            }
+        }
+        out.close();
+
+        // 释放资源
+        importer.FreeScene();
+    }
+
+    void multi_remove_duplicate_vertices(const std::vector<std::string>& input, const std::vector<std::string>& output) {
+        assert(input.size() == output.size());
+        for(int i = 0; i < input.size(); ++i) {
+            // 并行优化
+#pragma omp parallel for
+            remove_duplicate_vertices(input[i], output[i]);
+        }
+    }
 }
 
 
