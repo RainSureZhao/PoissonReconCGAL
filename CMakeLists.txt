@@ -19,7 +19,9 @@ endif()
 find_package(CGAL REQUIRED OPTIONAL_COMPONENTS Qt6)
 find_package(CGAL CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
-find_package(OpenMP REQUIRED)
+if(MSVC)
+    find_package(OpenMP REQUIRED)
+endif ()
 find_package(GTest REQUIRED)
 
 
