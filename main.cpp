@@ -108,8 +108,8 @@ int main()
         // R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_109.off)",
         // R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_fault_110.off)",
     };
-    cdt::get_duplicate_vertices(outputs, R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_duplicate_vertices_102_105.xyz)");
-//
+    // cdt::get_duplicate_vertices(outputs, R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock_duplicate_vertices_102_105.xyz)");tus
+    //
 ////     cdt::multi_convert_poly_to_off(inputs, outputs);
 //
 //
