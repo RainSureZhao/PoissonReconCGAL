@@ -35,6 +35,8 @@
 #include <CGAL/Implicit_to_labeling_function_wrapper.h>
 #include <CGAL/Labeled_mesh_domain_3.h>
 #include <CGAL/make_mesh_3.h>
+#include <CGAL/Surface_mesh.h>
+#include <CGAL/Polygon_mesh_processing/IO/polygon_mesh_io.h>
 #include "utils/implicit_functions.h"
 
 // IO
@@ -42,6 +44,7 @@
 // #include "code/solve_intersections.h"
 // #include "code/io_functions.h"
 
+namespace PMP = CGAL::Polygon_mesh_processing;
 namespace params = CGAL::parameters;
 
 #ifdef CGAL_CONCURRENT_MESH_3
@@ -55,6 +58,7 @@ typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 typedef CGAL::Polyhedron_3<K> Polyhedron;
 typedef K::FT FT;
 typedef K::Point_3 Point;
+typedef CGAL::Surface_mesh<Point> Surface_mesh;
 typedef FT_to_point_function_wrapper<double, K::Point_3> Function;
 typedef CGAL::Implicit_multi_domain_to_labeling_function_wrapper<Function>
         Function_wrapper;
@@ -105,8 +109,14 @@ namespace cdt {
     struct Face {
         std::vector<int> vertices; // 三个顶点，以counterclockwise顺序给出
         std::vector<int> edges; // 三条边
+        std::vector<Vertex> verticesPositions;
         int marker;  // 面对应的表面标记
         int leftVolumeNumber, rightVolumeNumber;  // 面左右两侧的体编号 ‐1 if empty (for boundary faces)
+        bool isLegal() const {
+            if(vertices.size() != 3 or verticesPositions.size() != 3) return false;
+            if(vertices[0] == vertices[1] || vertices[1] == vertices[2] || vertices[0] == vertices[2]) return false;
+            return true;
+        }
     };
 
     struct Zone {
@@ -1142,24 +1152,39 @@ namespace cdt {
 
         // 输出到off文件
         out << "OFF" << std::endl;
-        out << result.size() << " " << faceNum << " 0" << std::endl;
-        for (const auto& vertex : result) {
-            out << vertex.x << " " << vertex.y << " " << vertex.z << std::endl;
-        }
+
+        std::vector<Face> legalFaces;
         for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
             const aiMesh *mesh = scene->mMeshes[i];
             // 遍历每个面
             for(unsigned int j = 0; j < mesh->mNumFaces; j++) {
                 const aiFace &face = mesh->mFaces[j];
+                Face tmpFace;
                 // std::cout << "Face " << j << " has " << face.mNumIndices << " indices." << std::endl;
-                out << face.mNumIndices << " ";
+                // out << face.mNumIndices << " ";
                 for(unsigned int k = 0; k < face.mNumIndices; k++) {
                     unsigned int vertexID = face.mIndices[k];
-                    aiVector3D vertex = mesh->mVertices[vertexID];
-                    out << mp[{vertex.x, vertex.y, vertex.z}] << " ";
+                    tmpFace.verticesPositions.push_back({mesh->mVertices[vertexID].x, mesh->mVertices[vertexID].y, mesh->mVertices[vertexID].z});
+                    tmpFace.vertices.push_back(mp[tmpFace.verticesPositions.back()]);
+                    // aiVector3D vertex = mesh->mVertices[vertexID];
+                    // out << mp[{vertex.x, vertex.y, vertex.z}] << " ";
                 }
-                out << std::endl;
+                if(tmpFace.isLegal()) {
+                    legalFaces.push_back(tmpFace);
+                }
+                // out << std::endl;
             }
+        }
+        out << result.size() << " " << legalFaces.size() << " 0" << std::endl;
+        for (const auto& vertex : result) {
+            out << vertex.x << " " << vertex.y << " " << vertex.z << std::endl;
+        }
+        for(const auto& face : legalFaces) {
+            out << 3 << " ";
+            for(auto vertex : face.verticesPositions) {
+                 out << mp[{vertex.x, vertex.y, vertex.z}] << " ";
+            }
+            out << std::endl;
         }
         out.close();
 
@@ -1180,9 +1205,22 @@ namespace cdt {
      * @brief 利用断层面使地层面成为完整的
      * @param surface_input
      * @param fault_inputs
+     * @param output
      */
-    void get_sealed_surface(const std::string& surface_input, const std::vector<std::string>& fault_inputs) {
-
+    void get_sealed_surface(const std::string& surface_input, const std::vector<std::string>& fault_inputs, const std::string& output) {
+        // 依次处理地层面与每个断层面的截断情况
+        Surface_mesh surface_mesh;
+        if(!PMP::IO::read_polygon_mesh(surface_input, surface_mesh)) {
+            std::cerr << "Error reading surface mesh file" << std::endl;
+            throw std::runtime_error("Error reading surface mesh file");
+        }
+        for(const auto& fault_input : fault_inputs) {
+            Surface_mesh fault_mesh;
+            if(!PMP::IO::read_polygon_mesh(fault_input, fault_mesh)) {
+                std::cerr << "Error reading fault mesh file: " << fault_input << std::endl;
+                throw std::runtime_error("Error reading fault mesh file: " + fault_input);
+            }
+        }
     }
 
     /**
