@@ -1224,7 +1224,8 @@ namespace cdt {
             }
             auto intersection_result = get_intersection(surface_mesh, fault_mesh);
             auto intersection_mesh_pair = get_intersection_mesh(surface_mesh, fault_mesh, intersection_result);
-            auto polylines = get_intersection_line(surface_mesh, fault_mesh, intersection_mesh_pair.second);
+            auto intersection_lines = get_intersection_lines(surface_mesh, fault_mesh, intersection_mesh_pair.second);
+            auto intersection_lines_all = get_all_intersection_lines(fault_mesh, intersection_lines);
         }
     }
 

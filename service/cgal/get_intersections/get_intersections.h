@@ -12,6 +12,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <unordered_set>
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 typedef K::Point_3 Point_3;
@@ -189,11 +190,43 @@ std::pair<Surface_mesh, Surface_mesh> get_intersection_mesh(const Surface_mesh& 
     return {intersection_mesh1, intersection_mesh2};
 }
 
+/**
+ * @brief 获取相交线
+ * @param mesh1
+ * @param mesh2
+ * @param intersection_mesh
+ * @return
+ */
 std::vector<Edge_index> get_intersection_lines(const Surface_mesh& mesh1, const Surface_mesh& mesh2, const Surface_mesh& intersection_mesh) {
     std::vector<Edge_index> intersection_lines;
+    std::unordered_set<Point_3> mesh1_vertex_set;
 
+    for(auto it = mesh1.vertices_begin(); it != mesh1.vertices_end(); it ++) {
+        mesh1_vertex_set.insert(mesh1.point(*it));
+    }
 
+    for(auto it = intersection_mesh.edges_begin(); it != intersection_mesh.edges_end(); it ++) {
+        auto check([&](const Point_3 &vertex) {
+            return mesh1_vertex_set.contains(vertex);
+        });
+        // 获取当前边的一个 halfedge
+        auto h = intersection_mesh.halfedge(*it);
+        vertex_descriptor v1_id = intersection_mesh.source(h);  // 第一个端点
+        vertex_descriptor v2_id = intersection_mesh.target(h);  // 第二个端点
+        Point_3 v1 = intersection_mesh.point(v1_id);
+        Point_3 v2 = intersection_mesh.point(v2_id);
+        if(check(v1) and check(v2)) {
+            intersection_lines.push_back(*it);
+        }
+    }
     return intersection_lines;
 }
+
+std::vector<Edge_index> get_all_intersection_lines(const Surface_mesh& mesh, const std::vector<Edge_index>& intersection_lines) {
+    std::vector<Edge_index> all_intersection_lines(intersection_lines.begin(), intersection_lines.end());
+
+    return all_intersection_lines;
+}
+
 
 #endif //POISSONRECONCGAL_GET_INTERSECTIONS_H
