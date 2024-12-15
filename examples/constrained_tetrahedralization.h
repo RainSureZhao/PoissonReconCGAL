@@ -41,6 +41,8 @@
 
 // IO
 #include <CGAL/IO/File_medit.h>
+
+#include "service/cgal/get_intersections/get_intersections.h"
 // #include "code/solve_intersections.h"
 // #include "code/io_functions.h"
 
@@ -1220,6 +1222,9 @@ namespace cdt {
                 std::cerr << "Error reading fault mesh file: " << fault_input << std::endl;
                 throw std::runtime_error("Error reading fault mesh file: " + fault_input);
             }
+            auto intersection_result = get_intersection(surface_mesh, fault_mesh);
+            auto intersection_mesh_pair = get_intersection_mesh(surface_mesh, fault_mesh, intersection_result);
+            auto polylines = get_intersection_line(surface_mesh, fault_mesh, intersection_mesh_pair.second);
         }
     }
 
