@@ -56,3 +56,27 @@ TEST(modelTest1, modelTest1) {
     std::string output = R"(..\data\model_edges_test.mesh)";
     cdt::recovery_edges_from_surface_with_criteria(surfaces, indices, edges, output, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0);
 }
+
+TEST(PatchTest1, PatchTest1) {
+    std::vector<std::string> surfaces {
+        R"(../data/patch-01.off)",
+        R"(../data/patch-13.off)",
+        R"(../data/patch-20.off)",
+        R"(../data/patch-21.off)",
+        R"(../data/patch-23.off)",
+        R"(../data/patch-30.off)",
+    };
+
+    std::vector<std::pair<int, int>> indices {
+        {0, 1},
+        {1, 3},
+        {2, 0},
+        {2, 1},
+        {2, 3},
+        {3, 0}
+    };
+
+    std::string edges;
+    std::string output = R"(../data/patch_model_test.mesh)";
+    cdt::recovery_edges_from_surface_with_criteria(surfaces, indices, edges, output, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0);
+}
