@@ -70,6 +70,13 @@ namespace model {
 
         std::unordered_set<VolumnLabel> volumeLabels;
     };
+
+    struct Patch {
+        std::vector<Vertex> vertices;
+        std::vector<Edge> edges;
+        std::vector<Face> faces;
+        Marker marker;
+    };
 }
 
 #endif //POISSONRECONCGAL_GEOMETRY_ELEMENT_H

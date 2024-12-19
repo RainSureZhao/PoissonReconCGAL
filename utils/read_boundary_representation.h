@@ -28,93 +28,83 @@ namespace utils {
         std::getline(brep_in, brep.uniqueId);  // 读取唯一标识
 
         // 读取计数和几何信息
-        int numVertices, numEdges, numFaces, numVolumes, numZones;
-        int numMarkers;
-        int numHorizonMarkers;
-        int numFaultMarkers;
-        int numBoundarySurfaceMarkers;
         std::getline(brep_in, line);
-        std::istringstream(line) >> numVertices >> numEdges >> numFaces >> numVolumes;
+        std::istringstream(line) >> brep.numVertices >> brep.numEdges >> brep.numFaces >> brep.numVolumes;
         std::getline(brep_in, line);
         // 读入marker的数量
-        std::istringstream(line) >> numMarkers;
-        // horizon的marker
-        std::unordered_set<int> horizonMarkerSet;
-        brep_in >> numHorizonMarkers;
-        std::vector<int> horizonMarkers(numHorizonMarkers);
-        for(int i = 0; i < numHorizonMarkers; i ++) {
+        std::istringstream(line) >> brep.numMarkers;
+
+        brep_in >> brep.numHorizonMarkers;
+        std::vector<int> horizonMarkers(brep.numHorizonMarkers);
+        for(int i = 0; i < brep.numHorizonMarkers; i ++) {
             int marker;
             brep_in >> marker;
             horizonMarkers[i] = marker;
-            horizonMarkerSet.insert(marker);
+            brep.horizonMarkers.insert(marker);
         }
         // fault的marker
-        brep_in >> numFaultMarkers;
-        std::unordered_set<int> faultSurfaceMarkerSet;
-        std::vector<int> faultMarkers(numFaultMarkers);
-        for(int i = 0; i < numFaultMarkers; i ++) {
+        brep_in >> brep.numFaultMarkers;
+        std::vector<int> faultMarkers(brep.numFaultMarkers);
+        for(int i = 0; i < brep.numFaultMarkers; i ++) {
             int marker;
             brep_in >> marker;
             faultMarkers[i] = marker;
-            faultSurfaceMarkerSet.insert(marker);
+            brep.faultMarkers.insert(marker);
         }
         // boundary surface的marker
-        brep_in >> numBoundarySurfaceMarkers;
-        std::vector<int> boundarySurfaceMarkers(numBoundarySurfaceMarkers);
-        std::unordered_set<int> boundarySurfaceMarkerSet;
-        for(int i = 0; i < numBoundarySurfaceMarkers; i ++) {
+        brep_in >> brep.numBoundarySurfaceMarkers;
+        std::vector<int> boundarySurfaceMarkers(brep.numBoundarySurfaceMarkers);
+        for(int i = 0; i < brep.numBoundarySurfaceMarkers; i ++) {
             int marker;
             brep_in >> marker;
             boundarySurfaceMarkers[i] = marker;
-            boundarySurfaceMarkerSet.insert(marker);
+            brep.boundaryMarkers.insert(marker);
         }
 
         // 读取顶点
-        std::vector<Vertex> vertices(numVertices);
-        for (int i = 0; i < numVertices; ++i) {
-            brep_in >> vertices[i].x >> vertices[i].y >> vertices[i].z;
+        brep.vertices.resize(brep.numVertices);
+        for (int i = 0; i < brep.numVertices; ++i) {
+            brep_in >> brep.vertices[i].x >> brep.vertices[i].y >> brep.vertices[i].z;
         }
 
         // 读取边
-        std::vector<Edge> edges(numEdges);
-        for (int i = 0; i < numEdges; ++i) {
-            brep_in >> edges[i].start >> edges[i].end;
+        brep.edges.resize(brep.numEdges);
+        for (int i = 0; i < brep.numEdges; ++i) {
+            brep_in >> brep.edges[i].start >> brep.edges[i].end;
         }
 
         // 读取面
-        std::vector<Face> boundarySurfaces;
-        std::vector<Face> faultSurfaces;
-        std::vector<Face> horizonSurfaces;
-        std::vector<Face> faces(numFaces);
-        for (int i = 0; i < numFaces; ++i) {
-            faces[i].vertices.resize(3);
+        brep.faces.resize(brep.numFaces);
+        for (int i = 0; i < brep.numFaces; ++i) {
+            brep.faces[i].vertices.resize(3);
             for (int j = 0; j < 3; ++j) {
-                brep_in >> faces[i].vertices[j];
+                brep_in >> brep.faces[i].vertices[j];
             }
-            faces[i].edges.resize(3);
+            brep.faces[i].edges.resize(3);
             for (int j = 0; j < 3; ++j) {
-                brep_in >> faces[i].edges[j];
+                brep_in >> brep.faces[i].edges[j];
             }
-            brep_in >> faces[i].marker;  // 读取面的标记
+            brep_in >> brep.faces[i].marker;  // 读取面的标记
 
-            brep_in >> faces[i].leftVolumeNumber; // 读取面左侧的体编号
-            brep_in >> faces[i].rightVolumeNumber; // 读取面右侧的体编号
-            if(boundarySurfaceMarkerSet.count(faces[i].marker)) boundarySurfaces.push_back(faces[i]);
-            if(faultSurfaceMarkerSet.count(faces[i].marker)) faultSurfaces.push_back(faces[i]);
-            if(horizonMarkerSet.count(faces[i].marker)) horizonSurfaces.push_back(faces[i]);
+            brep_in >> brep.faces[i].leftVolumeNumber; // 读取面左侧的体编号
+            brep_in >> brep.faces[i].rightVolumeNumber; // 读取面右侧的体编号
+            if(brep.boundaryMarkers.count(brep.faces[i].marker)) brep.boundaryFaces.push_back(brep.faces[i]);
+            if(brep.faultMarkers.count(brep.faces[i].marker)) brep.faultFaces.push_back(brep.faces[i]);
+            if(brep.horizonMarkers.count(brep.faces[i].marker)) brep.horizonFaces.push_back(brep.faces[i]);
         }
 
         // 读取区域信息
-        brep_in >> numZones;  // 读取区域数量
-        std::vector<Zone> zones(numZones);
-        for (int i = 0; i < numZones; ++i) {
+        brep_in >> brep.numZones;  // 读取区域数量
+        brep.zones.resize(brep.numZones);
+        for (int i = 0; i < brep.numZones; ++i) {
             int numVolumesInZone;
-            brep_in >> zones[i].zoneNumber >> numVolumesInZone;
-            zones[i].volumes.resize(numVolumesInZone);
+            brep_in >> brep.zones[i].zoneNumber >> numVolumesInZone;
+            brep.zones[i].volumes.resize(numVolumesInZone);
             for (int j = 0; j < numVolumesInZone; ++j) {
-                brep_in >> zones[i].volumes[j];
+                brep_in >> brep.zones[i].volumes[j];
             }
         }
+        return brep;
     }
 }
 
