@@ -80,6 +80,10 @@ namespace utils {
             for (int j = 0; j < 3; ++j) {
                 brep_in >> brep.faces[i].vertices[j];
             }
+            brep.faces[i].verticesPositions.resize(3);
+            for (int j = 0; j < 3; ++j) {
+                brep.faces[i].verticesPositions[j] = brep.vertices[brep.faces[i].vertices[j]];
+            }
             brep.faces[i].edges.resize(3);
             for (int j = 0; j < 3; ++j) {
                 brep_in >> brep.faces[i].edges[j];
@@ -88,9 +92,9 @@ namespace utils {
 
             brep_in >> brep.faces[i].leftVolumeNumber; // 读取面左侧的体编号
             brep_in >> brep.faces[i].rightVolumeNumber; // 读取面右侧的体编号
-            if(brep.boundaryMarkers.count(brep.faces[i].marker)) brep.boundaryFaces.push_back(brep.faces[i]);
-            if(brep.faultMarkers.count(brep.faces[i].marker)) brep.faultFaces.push_back(brep.faces[i]);
-            if(brep.horizonMarkers.count(brep.faces[i].marker)) brep.horizonFaces.push_back(brep.faces[i]);
+            if(brep.boundaryMarkers.contains(brep.faces[i].marker)) brep.boundaryFaces.push_back(brep.faces[i]);
+            if(brep.faultMarkers.contains(brep.faces[i].marker)) brep.faultFaces.push_back(brep.faces[i]);
+            if(brep.horizonMarkers.contains(brep.faces[i].marker)) brep.horizonFaces.push_back(brep.faces[i]);
         }
 
         // 读取区域信息

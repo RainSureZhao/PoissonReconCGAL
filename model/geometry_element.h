@@ -77,6 +77,13 @@ namespace model {
         std::vector<Face> faces;
         Marker marker;
     };
+
+    struct PSC {
+        std::vector<Vertex> vertices;
+        std::vector<Patch> patches;
+        std::vector<Edge> featureEdges;
+        std::vector<int> featureVertices;
+    };
 }
 
 #endif //POISSONRECONCGAL_GEOMETRY_ELEMENT_H
