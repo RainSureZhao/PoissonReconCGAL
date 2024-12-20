@@ -31,6 +31,8 @@ namespace model {
 
     struct Edge {
         int start, end;
+        Edge() = default;
+        Edge(int start, int end) : start(start), end(end) {}
     };
 
     struct Face {
@@ -81,7 +83,7 @@ namespace model {
     struct PSC {
         std::vector<Vertex> vertices;
         std::vector<Patch> patches;
-        std::vector<Edge> featureEdges;
+        std::vector<std::vector<Edge>> featureEdges;
         std::vector<int> featureVertices;
     };
 }
