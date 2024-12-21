@@ -125,15 +125,15 @@ namespace cdt {
      * @param cell_radius_edge_bound
      * @param cell_size_bound
      */
-    void recovery_edges_from_surface_with_criteria(const std::vector<std::string>& meshs, const std::vector<std::pair<int, int>>& incident_subdomains,
+    void recovery_edges_from_surface_with_criteria(const std::vector<std::string>& meshes, const std::vector<std::pair<int, int>>& incident_subdomains,
                                                    const std::string& edges, const std::string& output, double edge_bound, double facet_angle_min_bound,
                                                    double facet_size_bound, double facet_approximation_bound, double cell_radius_edge_bound, double cell_size_bound) {
-        size_t nb_patches = meshs.size();
+        size_t nb_patches = meshes.size();
         std::vector<Polyhedron> patches(nb_patches);
         for(std::size_t i = 0; i < nb_patches; ++i) {
-            std::ifstream input(CGAL::data_file_path(meshs[i]));
+            std::ifstream input(CGAL::data_file_path(meshes[i]));
             if(!(input >> patches[i])) {
-                std::cerr << "Error reading " << CGAL::data_file_path(meshs[i]) << " as a polyhedron!\n";
+                std::cerr << "Error reading " << CGAL::data_file_path(meshes[i]) << " as a polyhedron!\n";
                 return;
             }
         }

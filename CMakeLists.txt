@@ -30,7 +30,7 @@ file(GLOB EXAMPLES "examples/*.h")
 file(GLOB GEOMETRY "geometry/*.h")
 file(GLOB MODEL "model/*.h")
 file(GLOB UTILS "utils/*.h" "utils/*.cpp")
-file(GLOB_RECURSE SERVICE "service/*.h" "service/*.cpp")
+file(GLOB_RECURSE SERVICE "*.h" "*.cpp")
 file(GLOB TESTS "tests/*.cpp")
 
 add_executable(PoissonReconCGAL

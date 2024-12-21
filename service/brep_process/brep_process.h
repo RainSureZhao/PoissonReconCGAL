@@ -7,6 +7,7 @@
 
 #include "model/geometry_element.h"
 #include <vector>
+#include <queue>
 #include <unordered_map>
 #include <boost/graph/graph_concepts.hpp>
 #include <CGAL/Simple_cartesian.h>
