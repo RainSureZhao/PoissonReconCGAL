@@ -78,5 +78,5 @@ TEST(PatchTest1, PatchTest1) {
 
     std::string edges;
     std::string output = R"(../data/patch_model_test.mesh)";
-    cdt::recovery_edges_from_surface_with_criteria(surfaces, indices, edges, output, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0);
+    cdt::recovery_edges_from_surface_with_criteria(surfaces, indices, edges, output, 8.0, 25.0, 8.0, 0.2, 3.0, 10.0);
 }

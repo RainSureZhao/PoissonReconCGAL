@@ -65,7 +65,7 @@ namespace service::cgal::tetrahedron {
         // domain.detect_features(); //includes detection of borders
 
         // Add features for protection
-        domain.add_features(featuredCurves.begin(), featuredCurves.end());
+        // domain.add_features(featuredCurves.begin(), featuredCurves.end());
 
         // Criteria
         Edge_criteria edge_criteria(edge_bound);
