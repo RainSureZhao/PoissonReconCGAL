@@ -7,6 +7,7 @@
 #include "service/brep_process/brep_process.h"
 #include "service/cgal/polyhedron/make_polyhedron.h"
 #include "service/cgal/tetrahedron/tetrahedrzlization.h"
+#include "utils/converter.h"
 
 TEST(BrepTest, Test1) {
     auto brep = utils::ReadBoundaryRepresentation(R"(../data/layerblock.brep)");
@@ -41,5 +42,13 @@ TEST(BrepTest, Test3) {
     for(size_t i = 0; i < patches.size(); i ++) incidientDomains.emplace_back(0, 1);
     auto featureCurves = service::cgal::polyhedron::GetFeatureCurves(psc.featureEdges, psc.vertices);
     std::string output = R"(../data/layerblock_test.mesh)";
-    service::cgal::tetrahedron::Tetrahedralization(patches, featureCurves, incidientDomains, output, 10.0, 25, 10.0, 1.0, 10.0, 10.0);
+    service::cgal::tetrahedron::Tetrahedralization(patches, featureCurves, incidientDomains, output, 100.0, 25, 100.0, 10.0, 100.0, 100.0);
+}
+
+TEST(BrepTest, Test4) {
+    auto brep = utils::ReadBoundaryRepresentation(R"(../data/layerblock.brep)");
+    auto psc = service::GetPSC(brep);
+    // utils::OutputPSCPatch(psc);
+    auto featureCurves = service::cgal::polyhedron::GetFeatureCurves(psc.featureEdges, psc.vertices);
+    utils::OutputFeatureCurves(featureCurves);
 }
