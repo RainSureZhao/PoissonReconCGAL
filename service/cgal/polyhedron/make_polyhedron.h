@@ -76,7 +76,7 @@ namespace service::cgal::polyhedron {
     std::vector<Polyhedron> ConvertPSCToPolyhedrons(const model::PSC& psc) {
         std::vector<Polyhedron> patches(psc.patches.size());
 #pragma omp parallel for
-        for(size_t i = 0; i < psc.patches.size(); i ++) {
+        for(int i = 0; i < psc.patches.size(); i ++) {
             patches[i] = ConvertPatchToPolyhedron(psc.patches[i], psc.vertices);
         }
         return patches;

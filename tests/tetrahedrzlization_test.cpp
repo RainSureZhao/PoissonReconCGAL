@@ -2,6 +2,7 @@
 // Created by RainSure on 24-12-14.
 //
 #include "service/cgal/recovery_edges_mesh/recovery_edges_mesh.h"
+#include "service/cgal/tetrahedron/tet_surface_mesh_without_feature.h"
 #include <gtest/gtest.h>
 
 TEST(LayerBlockTest1, LayerBlockTest1) {
@@ -77,6 +78,12 @@ TEST(PatchTest1, PatchTest1) {
     };
 
     std::string edges;
-    std::string output = R"(../data/patch_model_test.mesh)";
-    cdt::recovery_edges_from_surface_with_criteria(surfaces, indices, edges, output, 8.0, 25.0, 8.0, 0.2, 3.0, 10.0);
+    std::string output = R"(../data/patch_model_facet_approximation_error_test.mesh)";
+    cdt::recovery_edges_from_surface_with_criteria(surfaces, indices, edges, output, 8.0, 25.0, 8.0, 100.0, 3.0, 10.0);
+}
+
+
+TEST(TetTest, Test1) {
+    service::cgal::tetrahedron::tetrahedralization_by_surface_mesh(R"(D:\Code\cpp\PoissonReconCGAL\data\nickel_counting_tube.off)", R"(D:\Code\cpp\PoissonReconCGAL\data\nickel_counting_tube.mesh)", R"(D:\Code\cpp\PoissonReconCGAL\data\nickel_counting_tube_refinement.mesh)");
+
 }
