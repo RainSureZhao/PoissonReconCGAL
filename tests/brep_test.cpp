@@ -39,9 +39,12 @@ TEST(BrepTest, Test3) {
     auto psc = service::GetPSC(brep);
     auto patches = service::cgal::polyhedron::ConvertPSCToPolyhedrons(psc);
     std::vector<std::pair<int, int>> incidientDomains;
-    for(size_t i = 0; i < patches.size(); i ++) incidientDomains.emplace_back(0, 1);
-    auto featureCurves = service::cgal::polyhedron::GetFeatureCurves(psc.featureEdges, psc.vertices);
-    std::string output = R"(../data/layerblock_test.mesh)";
+    incidientDomains.reserve(patches.size());
+    for(size_t i = 0; i < patches.size(); i ++) {
+        incidientDomains.emplace_back(0, 1);
+    }
+    const auto featureCurves = service::cgal::polyhedron::GetFeatureCurves(psc.featureEdges, psc.vertices);
+    const std::string output = R"(../data/layerblock_test.mesh)";
     service::cgal::tetrahedron::Tetrahedralization(patches, featureCurves, incidientDomains, output, 100.0, 25, 100.0, 10.0, 100.0, 100.0);
 }
 
