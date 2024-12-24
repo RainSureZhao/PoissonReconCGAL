@@ -4,14 +4,18 @@
 
 #ifndef POISSONRECONCGAL_TETRAHEDRZLIZATION_H
 #define POISSONRECONCGAL_TETRAHEDRZLIZATION_H
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-
-#include <CGAL/Mesh_triangulation_3.h>
-#include <CGAL/Mesh_complex_3_in_triangulation_3.h>
-#include <CGAL/Mesh_criteria_3.h>
-
-#include <CGAL/Polyhedral_complex_mesh_domain_3.h>
-#include <CGAL/make_mesh_3.h>
+// #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include "third_party/CGAL-6.0.1/include/CGAL/Exact_predicates_inexact_constructions_kernel.h"
+// #include <CGAL/Mesh_triangulation_3.h>
+#include "third_party/CGAL-6.0.1/include/CGAL/Mesh_triangulation_3.h"
+// #include <CGAL/Mesh_complex_3_in_triangulation_3.h>
+#include "third_party/CGAL-6.0.1/include/CGAL/Mesh_complex_3_in_triangulation_3.h"
+// #include <CGAL/Mesh_criteria_3.h>
+#include "third_party/CGAL-6.0.1/include/CGAL/Mesh_criteria_3.h"
+// #include <CGAL/Polyhedral_complex_mesh_domain_3.h>
+#include "third_party/CGAL-6.0.1/include/CGAL/Polyhedral_complex_mesh_domain_3.h"
+// #include <CGAL/make_mesh_3.h>
+#include "third_party/CGAL-6.0.1/include/CGAL/make_mesh_3.h"
 
 
 namespace service::cgal::tetrahedron {
