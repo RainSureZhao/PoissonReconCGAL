@@ -1196,9 +1196,9 @@ namespace cdt {
 
     void multi_remove_duplicate_vertices(const std::vector<std::string>& input, const std::vector<std::string>& output) {
         assert(input.size() == output.size());
+#pragma omp parallel for
         for(int i = 0; i < input.size(); ++i) {
             // 并行优化
-#pragma omp parallel for
             remove_duplicate_vertices(input[i], output[i]);
         }
     }

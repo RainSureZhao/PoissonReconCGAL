@@ -23,6 +23,7 @@ int main()
 //     cdt::constrained_tetrahedralization_with_tetgen(R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock)", R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock)");
 //     cdt::convertNodeEleToPLY(R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock.node)", R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock.ele)", R"(D:\Code\cpp\PoissonReconCGAL\data\layerblock.ply)");
 
+    cdt::tetrahedralization_by_surface_mesh(R"(D:\Code\cpp\PoissonReconCGAL\data\nickel_counting_tube.off)", R"(D:\Code\cpp\PoissonReconCGAL\data\nickel_counting_tube.mesh)", R"(D:\Code\cpp\PoissonReconCGAL\data\nickel_counting_tube_refinement.mesh)");
 //      cdt::tetrahedralization_by_surface_mesh(R"(D:\Code\cpp\PoissonReconCGAL\data\fwk_triangles_2.off)", R"(D:\Code\cpp\PoissonReconCGAL\data\fwk_triangles_2.mesh)", R"(D:\Code\cpp\PoissonReconCGAL\data\fwk_triangles_2_refinement.mesh)");
 
 //    std::vector<std::string> surfaces {

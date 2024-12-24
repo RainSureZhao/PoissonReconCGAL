@@ -57,7 +57,7 @@ namespace utils {
      */
     void OutputPSCPatch(const model::PSC& psc) {
 #pragma omp parallel for
-        for(size_t i = 0; i < psc.patches.size(); i ++) {
+        for(int i = 0; i < psc.patches.size(); i ++) {
             const auto& patch = psc.patches[i];
             OutputPatchToOff(patch, psc.vertices, "../data/patches/" + std::to_string(i) + ".off");
         }
@@ -67,7 +67,7 @@ namespace utils {
     typedef K::Point_3 Point;
     void OutputFeatureCurves(const std::vector<std::vector<Point>>& featureCurves) {
 #pragma omp parallel for
-        for(size_t i = 0; i < featureCurves.size(); i ++) {
+        for(int i = 0; i < featureCurves.size(); i ++) {
             std::ofstream out("../data/featureCurves/" + std::to_string(i) + ".xyz");
             for(const auto& p : featureCurves[i]) {
                 out << p.x() << " " << p.y() << " " << p.z() << std::endl;
