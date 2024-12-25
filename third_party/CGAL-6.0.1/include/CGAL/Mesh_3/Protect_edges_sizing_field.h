@@ -634,6 +634,8 @@ insert_corners()
     dt.insert(p);
   }
 
+  // export weighted points
+  std::ofstream outWeightPoints(R"(../data/weighted_points_corners.xyz)");
   for ( typename Initial_corners::iterator cit = corners.begin(),
           end = corners.end() ; cit != end ; ++cit )
   {
@@ -676,6 +678,7 @@ insert_corners()
       w = (std::min)(w, nearest_sq_dist / FT(9));
     }
 
+    outWeightPoints << p.x() << " " << p.y() << " " << p.z() << " " << w << std::endl;
     // Insert corner with ball (dim is zero because p is a corner)
     Vertex_handle v = smart_insert_point(p, w, 0, p_index,
                                          CGAL::Emptyset_iterator()).first;
@@ -689,6 +692,7 @@ insert_corners()
       set_special(v);
     }
   }
+  outWeightPoints.close();
 } //end insert_corners()
 
 
@@ -1227,6 +1231,8 @@ insert_balls(const Vertex_handle& vp,
   //   n = 2(d-sq) / (sp+sq)
   // =======================
 
+  std::ofstream outWeightPoints(R"(../data/weighted_points_edges.xyz)", std::ios::app);
+
   const FT d_signF = static_cast<FT>(d_sign);
   int n = static_cast<int>(std::floor(FT(2)*(d-sq) / (sp+sq))+.5);
   // if( minimal_weight() != 0 && n == 0 ) return;
@@ -1352,7 +1358,7 @@ insert_balls(const Vertex_handle& vp,
     // Index and dimension
     Index index = domain_.index_from_curve_index(curve_index);
     int dim = 1; // new_point is on edge
-
+    outWeightPoints << new_point.x() << " " << new_point.y() << " " << new_point.z() << " " << point_weight << std::endl;
     // Insert point into c3t3
     std::pair<Vertex_handle, ErasedVeOutIt> pair =
       smart_insert_point(new_point, point_weight, dim, index, out);
@@ -1382,6 +1388,7 @@ insert_balls(const Vertex_handle& vp,
       c3t3_.add_to_complex(prev, vq, curve_index);
     }
   }
+  outWeightPoints.close();
   return out;
 }
 
@@ -1483,10 +1490,12 @@ refine_balls()
       new_sizes_copy(new_sizes.begin(), new_sizes.end());
     new_sizes.clear();
 
+    std::ofstream outRefineBalls(R"(../data/refine_balls.xyz)");
     // Update size of balls
     for (const std::pair<Vertex_handle,FT>& it : new_sizes_copy)
     {
       if(forced_stop()) break;
+      outRefineBalls << it.first->point().x() << " " << it.first->point().y() << " " << it.first->point().z() << " " << it.second << std::endl;
       const Vertex_handle v = it.first;
       const FT new_size = it.second;
       // Set size of the ball to new value
