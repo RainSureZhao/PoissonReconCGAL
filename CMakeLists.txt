@@ -10,9 +10,15 @@ SET(CGAL_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/CGAL-6.0.1)
 SET(CGAL_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/CGAL-6.0.1)
 
 # 手动设置 GMP 的路径
-set(GMP_INCLUDE_DIR "/opt/homebrew/include")  # GMP 的头文件路径
-set(GMP_LIBRARY "/opt/homebrew/lib/libgmp.dylib")  # GMP 的库文件路径
-SET(MPFR_LIBRARY "/opt/homebrew/lib/libmpfr.dylib")  # MPFR 的库文件路径
+if(APPLE)
+    set(GMP_INCLUDE_DIR "/opt/homebrew/include")  # GMP 的头文件路径
+    set(GMP_LIBRARY "/opt/homebrew/lib/libgmp.dylib")  # GMP 的库文件路径
+    SET(MPFR_LIBRARY "/opt/homebrew/lib/libmpfr.dylib")  # MPFR 的库文件路径
+elseif (MSVC)
+    set(GMP_INCLUDE_DIR "D:/Programs/vcpkg/installed/x64-windows/include")
+    set(GMP_LIBRARY "D:/Programs/vcpkg/installed/x64-windows/lib/gmp.lib")
+    set(MPFR_LIBRARY "D:/Programs/vcpkg/installed/x64-windows/lib/mpfr.lib")
+endif()
 
 # 添加编译器标志
 if(MSVC)
@@ -25,10 +31,13 @@ endif()
 
 #find_package(CGAL REQUIRED OPTIONAL_COMPONENTS Qt6)
 #find_package(CGAL CONFIG REQUIRED)
-find_package(PkgConfig REQUIRED)
+if(APPLE)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(MPFR REQUIRED mpfr)
+endif()
 find_package(Qt6 COMPONENTS Core REQUIRED)
 find_package(assimp CONFIG REQUIRED)
-pkg_check_modules(MPFR REQUIRED mpfr)
+
 if(MSVC)
     find_package(OpenMP REQUIRED)
 endif ()
