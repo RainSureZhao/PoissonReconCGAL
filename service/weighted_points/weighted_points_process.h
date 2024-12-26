@@ -7,10 +7,21 @@
 
 #include <vector>
 #include <map>
+#include <fstream>
+#include <array>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Polyhedron_3.h>
+#include <CGAL/make_mesh_3.h>
+#include <CGAL/Surface_mesh.h>
+#include <CGAL/Subdivision_method_3/subdivision_methods_3.h>
+#include "CGAL/boost/graph/generators.h"
+#include "CGAL/boost/graph/Graph_with_descriptor_with_graph.h"
+
 namespace service::weighted_points {
     typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
     typedef K::Point_3 Point_3;
+    typedef CGAL::Polyhedron_3<K> Polyhedron;
+    typedef CGAL::Surface_mesh<Point_3>                          Mesh3;
 
     std::vector<std::pair<Point_3, double>> getWeightedPoints(const std::string& input) {
         std::vector<std::pair<Point_3, double>> weighted_points;
@@ -66,14 +77,94 @@ namespace service::weighted_points {
     }
 
     /**
+     *
+     * @param center
+     * @param radius
+     * @param iterations
+     * @return
+     */
+    Mesh3 GetSphere(const Point_3& center, double radius, unsigned int iterations = 2) {
+        Mesh3 mesh;
+        CGAL::make_icosahedron<Mesh3, Point_3>(mesh, center, radius);
+        CGAL::Subdivision_method_3::Loop_subdivision(
+          mesh, CGAL::parameters::number_of_iterations(iterations)
+        );
+        return mesh;
+    }
+
+    /**
+     * @brief
+     * @param spheres
+     * @param output
+     */
+    void write_spheres_to_off(const std::vector<Mesh3>& spheres, const std::string& output) {
+        std::ofstream out(output);
+        std::map<Point_3, int> pointMap;
+        int idx = 0;
+        std::vector<Point_3> points;
+        std::vector<std::array<Point_3, 3>> triangles;
+        for(const auto& sphere : spheres) {
+            for(const auto& v : vertices(sphere)) {
+                if(Point_3 point = {sphere.point(v).x(), sphere.point(v).y(), sphere.point(v).z()}; !pointMap.contains(point)) {
+                    pointMap[point] = idx ++;
+                    points.push_back(point);
+                }
+            }
+            for(const auto& f : faces(sphere)) {
+                std::vector<Point_3> triangle;
+                for(auto v : CGAL::vertices_around_face(halfedge(f, sphere), sphere)){
+                    Point_3 point = {sphere.point(v).x(), sphere.point(v).y(), sphere.point(v).z()};
+                    triangle.push_back(point);
+                }
+                assert(triangle.size() == 3);
+                triangles.push_back({triangle[0], triangle[1], triangle[2]});
+            }
+        }
+        out << "OFF" << std::endl;
+        out << points.size() << ' ' << triangles.size() << " 0" << std::endl;
+        for(const auto& p : points) {
+            out << p.x() << ' ' << p.y() << ' ' << p.z() << std::endl;
+        }
+        for(const auto& triangle : triangles) {
+            assert(pointMap.contains(triangle[0]));
+            assert(pointMap.contains(triangle[1]));
+            assert(pointMap.contains(triangle[2]));
+            out << 3 << ' ' << pointMap[triangle[0]] << ' ' << pointMap[triangle[1]] << ' ' << pointMap[triangle[2]] << std::endl;
+        }
+        out.close();
+    }
+
+    /**
      * @brief 加权点转成mesh
      * @param weighted_points_input
      * @param output
      */
     void Convert_weighted_points_to_mesh(const std::string& weighted_points_input, const std::string& output) {
-
-
+        auto weightedPoints = getWeightedPoints(weighted_points_input);
+        std::vector<Mesh3> spheres(weightedPoints.size());
+#pragma omp parallel for
+        for(int i = 0; i < weightedPoints.size(); i ++) {
+            spheres[i] = GetSphere(weightedPoints[i].first, weightedPoints[i].second);
+        }
+        write_spheres_to_off(spheres, output);
     }
+
+    /**
+     * @brief 加权点转成mesh
+     * @param weighted_points_input
+     * @param output
+     */
+    void Convert_weighted_points_to_mesh_separately(const std::string& weighted_points_input, const std::string& output) {
+        auto weightedPoints = getWeightedPoints(weighted_points_input);
+        std::vector<Mesh3> spheres(weightedPoints.size());
+#pragma omp parallel for
+        for(int i = 0; i < weightedPoints.size(); i ++) {
+            spheres[i] = GetSphere(weightedPoints[i].first, weightedPoints[i].second);
+            write_spheres_to_off({spheres[i]}, output + std::to_string(i) + ".off");
+        }
+    }
+
+
 }
 
 #endif //WEIGHTED_POINTS_PROCESS_H
