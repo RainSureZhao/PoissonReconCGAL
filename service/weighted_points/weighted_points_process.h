@@ -9,6 +9,7 @@
 #include <map>
 #include <fstream>
 #include <array>
+#include <cmath>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/make_mesh_3.h>
@@ -85,7 +86,7 @@ namespace service::weighted_points {
      */
     Mesh3 GetSphere(const Point_3& center, double radius, unsigned int iterations = 2) {
         Mesh3 mesh;
-        CGAL::make_icosahedron<Mesh3, Point_3>(mesh, center, radius);
+        CGAL::make_icosahedron<Mesh3, Point_3>(mesh, center, std::sqrt(radius));
         CGAL::Subdivision_method_3::Loop_subdivision(
           mesh, CGAL::parameters::number_of_iterations(iterations)
         );
