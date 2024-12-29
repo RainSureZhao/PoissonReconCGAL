@@ -110,9 +110,32 @@ namespace service::cgal::polyhedron {
      * @param featureCurve
      * @return
      */
-//    std::vector<Point> ProcessFeatureCurve(const std::vector<Point>& featureCurve) {
-//
-//    }
+    std::vector<std::vector<Point>> ProcessFeatureCurve(const std::vector<Point>& featureCurve) {
+        // 判断连续三个点，如果角度过大，则认为是一个拐点，或者两个端点距离中间点的距离差距过多，也认为是一个拐点
+        std::vector<std::vector<Point>> result;
+        std::vector<Point> curve;
+        curve.push_back(featureCurve[0]);
+        for(int i = 1; i < featureCurve.size() - 1; i ++) {
+            Point p1 = featureCurve[i - 1];
+            Point p2 = featureCurve[i];
+            Point p3 = featureCurve[i + 1];
+            double d1 = CGAL::squared_distance(p1, p2);
+            double d2 = CGAL::squared_distance(p2, p3);
+            double d3 = CGAL::squared_distance(p1, p3);
+            double cos = (d1 + d2 - d3) / (2 * sqrt(d1) * sqrt(d2));
+            if(cos < -0.5 and std::abs(d1 - d2) <= std::min(d1, d2) * 20) {
+                curve.push_back(p2);
+            } else {
+                curve.push_back(p2);
+                result.push_back(curve);
+                curve.clear();
+                curve.push_back(p2);
+            }
+        }
+        curve.push_back(featureCurve.back());
+        result.push_back(curve);
+        return result;
+    }
 }
 
 #endif //POISSONRECONCGAL_MAKE_POLYHEDRON_H

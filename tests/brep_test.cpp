@@ -44,11 +44,13 @@ TEST(BrepTest, Test3) {
         incidientDomains.emplace_back(0, 1);
     }
     auto featureCurves = service::cgal::polyhedron::GetFeatureCurves(psc.featureEdges, psc.vertices);
-//    for(auto& featureCurve : featureCurves) {
-//        featureCurve = service::cgal::polyhedron::ProcessFeatureCurve(featureCurve);
-//    }
+    std::vector<std::vector<service::cgal::polyhedron::Point>> newFeatureCurves;
+    for(auto& featureCurve : featureCurves) {
+        auto featureCurveSplit = service::cgal::polyhedron::ProcessFeatureCurve(featureCurve);
+        newFeatureCurves.insert(newFeatureCurves.end(), featureCurveSplit.begin(), featureCurveSplit.end());
+    }
     const std::string output = R"(../data/layerblock_test.mesh)";
-    service::cgal::tetrahedron::Tetrahedralization(patches, featureCurves, incidientDomains, output, 100.0, 25, 100.0, 10.0, 100.0, 100.0);
+    service::cgal::tetrahedron::Tetrahedralization(patches, newFeatureCurves, incidientDomains, output, 100.0, 25, 100.0, 10.0, 100.0, 100.0);
 }
 
 TEST(BrepTest, Test4) {
