@@ -8,6 +8,7 @@
 #include "model/geometry_element.h"
 #include <vector>
 #include <queue>
+#include <functional>
 #include <unordered_map>
 #include <boost/graph/graph_concepts.hpp>
 #include <CGAL/Simple_cartesian.h>
@@ -183,28 +184,26 @@ namespace service {
             }
             std::vector<model::Edge> newEdges;
             std::unordered_set<model::Marker> st;
-            auto bfs([&](model::Marker u) {
-                std::queue<model::Marker> q;
-                q.push(u);
-                while(!q.empty()) {
-                    auto t = q.front();
-                    q.pop();
-                    for(const auto& v : adj[t]) {
-                        if(st.contains(v)) {
-                            continue;
-                        }
-                        q.push(v);
-                        newEdges.emplace_back(v, t);
-                        st.insert(v);
+            std::function<void(model::Marker)> dfs;
+            dfs = [&](model::Marker u) {
+                for(auto& v : adj[u]) {
+                    if(st.contains(v)) {
+                        continue;
                     }
+                    newEdges.emplace_back(u, v);
+                    st.insert(v);
+                    dfs(v);
                 }
-            });
+            };
             for(const auto&[u, v] : edges) {
                 if(!st.contains(u)) {
-                    bfs(u);
+                    st.insert(u);
+                    dfs(u);
                 }
                 if(!st.contains(v)) {
-                    bfs(v);
+                    assert(false);
+                    st.insert(v);
+                    dfs(v);
                 }
             }
             featureEdges.push_back(newEdges);

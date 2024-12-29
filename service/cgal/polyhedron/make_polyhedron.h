@@ -104,6 +104,15 @@ namespace service::cgal::polyhedron {
         }
         return featureCurves;
     }
+
+    /**
+     * @brief 重新布点，并且对点进行去重
+     * @param featureCurve
+     * @return
+     */
+//    std::vector<Point> ProcessFeatureCurve(const std::vector<Point>& featureCurve) {
+//
+//    }
 }
 
 #endif //POISSONRECONCGAL_MAKE_POLYHEDRON_H

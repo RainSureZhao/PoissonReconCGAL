@@ -593,7 +593,7 @@ operator()(const bool refine)
   // Solve problems
   if ( refine && !forced_stop())
   {
-    refine_balls();
+//     refine_balls();
 #ifdef CGAL_MESH_3_VERBOSE
     std::cerr << "refine_balls() done. Nb of points in triangulation: "
               << c3t3_.triangulation().number_of_vertices() << std::endl;

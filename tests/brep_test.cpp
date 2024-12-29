@@ -43,7 +43,10 @@ TEST(BrepTest, Test3) {
     for(size_t i = 0; i < patches.size(); i ++) {
         incidientDomains.emplace_back(0, 1);
     }
-    const auto featureCurves = service::cgal::polyhedron::GetFeatureCurves(psc.featureEdges, psc.vertices);
+    auto featureCurves = service::cgal::polyhedron::GetFeatureCurves(psc.featureEdges, psc.vertices);
+//    for(auto& featureCurve : featureCurves) {
+//        featureCurve = service::cgal::polyhedron::ProcessFeatureCurve(featureCurve);
+//    }
     const std::string output = R"(../data/layerblock_test.mesh)";
     service::cgal::tetrahedron::Tetrahedralization(patches, featureCurves, incidientDomains, output, 100.0, 25, 100.0, 10.0, 100.0, 100.0);
 }
