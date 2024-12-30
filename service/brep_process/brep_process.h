@@ -137,6 +137,42 @@ namespace service {
         return {};
     }
 
+    void outputEdges(const std::vector<model::Edge>& edges, const model::BoundaryRepresentation& brep) {
+        // 把线段输出到ply文件中去
+        std::ofstream outputFile("../data/debug/lines.ply");
+        auto& vertices = brep.vertices;
+        std::vector<model::Vertex> newVertices;
+        std::map<int, int> pointMap;
+        for(const auto& edge : edges) {
+            if(pointMap.find(edge.start) == pointMap.end()) {
+                newVertices.push_back(vertices[edge.start]);
+                pointMap[edge.start] = newVertices.size() - 1;
+            }
+            if(pointMap.find(edge.end) == pointMap.end()) {
+                newVertices.push_back(vertices[edge.end]);
+                pointMap[edge.end] = newVertices.size() - 1;
+            }
+        }
+        outputFile << "ply" << std::endl;
+        outputFile << "format ascii 1.0" << std::endl;
+        outputFile << "element vertex " << newVertices.size() << std::endl;
+        outputFile << "property float x" << std::endl;
+        outputFile << "property float y" << std::endl;
+        outputFile << "property float z" << std::endl;
+        outputFile << "element edge " << edges.size() << std::endl;
+        outputFile << "property int vertex1" << std::endl;
+        outputFile << "property int vertex2" << std::endl;
+        outputFile << "end_header" << std::endl;
+
+        for(const auto& vertex : newVertices) {
+            outputFile << vertex.x << " " << vertex.y << " " << vertex.z << std::endl;
+        }
+        for(const auto& edge : edges) {
+            outputFile << pointMap[edge.start] << " " << pointMap[edge.end] << std::endl;
+        }
+        outputFile.close();
+    }
+
     /**
      * @brief 获取特征边
      * @param markerFaceComponents
@@ -178,9 +214,15 @@ namespace service {
         }
         for(const auto& [markers, edges] : markerEdges) {
             std::unordered_map<model::Marker, std::vector<model::Marker>> adj;
+            std::unordered_map<model::Marker, int> degree;
             for(const auto& edge : edges) {
                 adj[edge.start].push_back(edge.end);
                 adj[edge.end].push_back(edge.start);
+                degree[edge.start] ++;
+                degree[edge.end] ++;
+            }
+            if(degree.size() == 271) {
+                outputEdges(edges, brep);
             }
             std::vector<model::Edge> newEdges;
             std::unordered_set<model::Marker> st;
@@ -196,17 +238,27 @@ namespace service {
                 }
             };
             for(const auto&[u, v] : edges) {
-                if(!st.contains(u)) {
+                if(!st.contains(u) and degree[u] == 1) {
+                    if(!newEdges.empty()) {
+                        featureEdges.push_back(newEdges);
+                        newEdges.clear();
+                    }
                     st.insert(u);
                     dfs(u);
                 }
-                if(!st.contains(v)) {
-                    assert(false);
+                if(!st.contains(v)and degree[v] == 1) {
+                    // assert(false);
+                    if(!newEdges.empty()) {
+                        featureEdges.push_back(newEdges);
+                        newEdges.clear();
+                    }
                     st.insert(v);
                     dfs(v);
                 }
             }
-            featureEdges.push_back(newEdges);
+            if(!newEdges.empty()) {
+                featureEdges.push_back(newEdges);
+            }
         }
         return featureEdges;
     }

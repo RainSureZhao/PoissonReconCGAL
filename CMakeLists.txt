@@ -38,6 +38,13 @@ endif()
 find_package(Qt6 COMPONENTS Core REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 
+find_package(PCL REQUIRED)
+# 查找 VTK
+find_package(VTK REQUIRED)
+include_directories(${PCL_INCLUDE_DIRS})
+# 包含 VTK 的头文件
+include_directories(${VTK_INCLUDE_DIRS})
+
 if(MSVC)
     find_package(OpenMP REQUIRED)
 endif ()
@@ -86,6 +93,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE TetGen)
 target_link_libraries(${PROJECT_NAME} PRIVATE assimp::assimp)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${GMP_LIBRARY})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${MPFR_LIBRARY})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${PCL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${VTK_LIBRARIES})
 
 # 创建测试可执行文件
 add_executable(Tests ${TESTS})
@@ -107,6 +116,8 @@ target_link_libraries(Tests PRIVATE
         ${GTEST_LIBRARIES}
         ${GMP_LIBRARY}
         ${MPFR_LIBRARY}
+        ${PCL_LIBRARIES}
+        ${VTK_LIBRARIES}
         # pthread
 )
 if(APPLE)

@@ -593,12 +593,12 @@ operator()(const bool refine)
   // Solve problems
   if ( refine && !forced_stop())
   {
-//     refine_balls();
+     refine_balls();
 #ifdef CGAL_MESH_3_VERBOSE
     std::cerr << "refine_balls() done. Nb of points in triangulation: "
               << c3t3_.triangulation().number_of_vertices() << std::endl;
 #endif
-    CGAL_assertion(use_minimal_size() || c3t3_.is_valid());
+     CGAL_assertion(use_minimal_size() || c3t3_.is_valid());
  }
 
   // debug_dump_c3t3("dump-mesh-after-protect_edges.binary.cgal", c3t3_);

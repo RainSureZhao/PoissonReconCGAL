@@ -7,6 +7,8 @@
 #include "service/brep_process/brep_process.h"
 #include "service/cgal/polyhedron/make_polyhedron.h"
 #include "service/cgal/tetrahedron/tetrahedrzlization.h"
+#include "service/pcl/point_cloud/view_point_cloud.h"
+#include "service/vtk/point_cloud/view_point_cloud.h"
 #include "utils/converter.h"
 
 TEST(BrepTest, Test1) {
@@ -50,7 +52,7 @@ TEST(BrepTest, Test3) {
         newFeatureCurves.insert(newFeatureCurves.end(), featureCurveSplit.begin(), featureCurveSplit.end());
     }
     const std::string output = R"(../data/layerblock_test.mesh)";
-    service::cgal::tetrahedron::Tetrahedralization(patches, newFeatureCurves, incidientDomains, output, 100.0, 25, 100.0, 10.0, 100.0, 100.0);
+    service::cgal::tetrahedron::Tetrahedralization(patches, featureCurves, incidientDomains, output, 100.0, 25, 100.0, 10.0, 100.0, 100.0);
 }
 
 TEST(BrepTest, Test4) {
@@ -58,5 +60,58 @@ TEST(BrepTest, Test4) {
     auto psc = service::GetPSC(brep);
     // utils::OutputPSCPatch(psc);
     auto featureCurves = service::cgal::polyhedron::GetFeatureCurves(psc.featureEdges, psc.vertices);
-    utils::OutputFeatureCurves(featureCurves);
+    std::vector<std::vector<service::cgal::polyhedron::Point>> newFeatureCurves;
+    for(auto& featureCurve : featureCurves) {
+        auto featureCurveSplit = service::cgal::polyhedron::ProcessFeatureCurve(featureCurve);
+        newFeatureCurves.insert(newFeatureCurves.end(), featureCurveSplit.begin(), featureCurveSplit.end());
+    }
+    utils::OutputFeatureCurves(newFeatureCurves);
+}
+
+TEST(BrepTest, Test5) {
+    auto brep = utils::ReadBoundaryRepresentation(R"(../data/layerblock.brep)");
+    auto psc = service::GetPSC(brep);
+    // utils::OutputPSCPatch(psc);
+    auto featureCurves = service::cgal::polyhedron::GetFeatureCurves(psc.featureEdges, psc.vertices);
+    std::vector<std::vector<service::cgal::polyhedron::Point>> newFeatureCurves;
+    for(auto& featureCurve : featureCurves) {
+        auto featureCurveSplit = service::cgal::polyhedron::ProcessFeatureCurve(featureCurve);
+        newFeatureCurves.insert(newFeatureCurves.end(), featureCurveSplit.begin(), featureCurveSplit.end());
+    }
+    std::vector<std::vector<service::pcls::point_cloud::Point3D>> point_clouds;
+    for(auto& featureCurve : newFeatureCurves) {
+        std::vector<service::pcls::point_cloud::Point3D> point_cloud;
+        point_cloud.reserve(featureCurve.size());
+        for(auto& point : featureCurve) {
+            point_cloud.emplace_back(point.x(), point.y(), point.z());
+        }
+        point_clouds.emplace_back(point_cloud);
+    }
+    service::pcls::point_cloud::View_point_clouds(point_clouds);
+}
+
+TEST(BrepTest, Test6) {
+    auto brep = utils::ReadBoundaryRepresentation(R"(../data/layerblock.brep)");
+    auto psc = service::GetPSC(brep);
+
+    auto featureCurves = service::cgal::polyhedron::GetFeatureCurves(psc.featureEdges, psc.vertices);
+    std::vector<std::vector<service::cgal::polyhedron::Point>> newFeatureCurves;
+    for(auto& featureCurve : featureCurves) {
+        auto featureCurveSplit = service::cgal::polyhedron::ProcessFeatureCurve(featureCurve);
+        newFeatureCurves.insert(newFeatureCurves.end(), featureCurveSplit.begin(), featureCurveSplit.end());
+    }
+    std::vector<std::vector<service::vtks::point_cloud::Point3D>> point_clouds;
+    for(auto& featureCurve : newFeatureCurves) {
+        std::vector<service::vtks::point_cloud::Point3D> point_cloud;
+        point_cloud.reserve(featureCurve.size());
+        for(auto& point : featureCurve) {
+            point_cloud.emplace_back(point.x(), point.y(), point.z());
+        }
+        point_clouds.emplace_back(point_cloud);
+    }
+    service::vtks::point_cloud::View_point_clouds(point_clouds);
+}
+
+TEST(BrepTest, Test7) {
+    service::vtks::point_cloud::Test_vtk_PointCloud();
 }
