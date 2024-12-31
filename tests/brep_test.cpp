@@ -52,7 +52,7 @@ TEST(BrepTest, Test3) {
         newFeatureCurves.insert(newFeatureCurves.end(), featureCurveSplit.begin(), featureCurveSplit.end());
     }
     const std::string output = R"(../data/layerblock_test.mesh)";
-    service::cgal::tetrahedron::Tetrahedralization(patches, featureCurves, incidientDomains, output, 100.0, 25, 100.0, 10.0, 100.0, 100.0);
+    service::cgal::tetrahedron::Tetrahedralization(patches, newFeatureCurves, incidientDomains, output, 100.0, 25, 100.0, 10.0, 100.0, 100.0);
 }
 
 TEST(BrepTest, Test4) {

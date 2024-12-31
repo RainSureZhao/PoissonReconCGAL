@@ -123,17 +123,16 @@ namespace service::cgal::polyhedron {
             double d2 = CGAL::squared_distance(p2, p3);
             double d3 = CGAL::squared_distance(p1, p3);
             double cos = (d1 + d2 - d3) / (2 * sqrt(d1) * sqrt(d2));
-            if(cos < 0.0 and std::abs(d1 - d2) <= std::min(d1, d2) * 20) {
+            if(cos < -0.3) {
                 curve.push_back(p2);
             } else {
                 curve.push_back(p2);
-                result.push_back(curve);
+                if(curve.size() > 1) result.push_back(curve);
                 curve.clear();
-                curve.push_back(p2);
             }
         }
         curve.push_back(featureCurve.back());
-        result.push_back(curve);
+        if(curve.size() > 1) result.push_back(curve);
         return result;
     }
 }
