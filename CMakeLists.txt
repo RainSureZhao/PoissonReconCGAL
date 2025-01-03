@@ -18,6 +18,7 @@ elseif (MSVC)
     set(GMP_INCLUDE_DIR "D:/Programs/vcpkg/installed/x64-windows/include")
     set(GMP_LIBRARY "D:/Programs/vcpkg/installed/x64-windows/lib/gmp.lib")
     set(MPFR_LIBRARY "D:/Programs/vcpkg/installed/x64-windows/lib/mpfr.lib")
+    set(VTK_DIR "D:/Programs/vcpkg/installed/x64-windows/share/vtk")
 endif()
 
 # 添加编译器标志

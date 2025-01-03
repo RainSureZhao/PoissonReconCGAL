@@ -34,5 +34,5 @@ TEST(WeightPointTest, Test3) {
         R"(../data/weighted_points_cube_output.xyz)"
     );
     service::weighted_points::Convert_weighted_points_to_mesh(R"(../data/weighted_points_cube_output.xyz)",
-        R"(../data/weighted_points_cube/weight_points.off)");
+        R"(../data/weighted_points_cube/weight_points_v2.off)");
 }
