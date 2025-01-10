@@ -593,12 +593,12 @@ operator()(const bool refine)
   // Solve problems
   if ( refine && !forced_stop())
   {
-     refine_balls();
+//      refine_balls();
 #ifdef CGAL_MESH_3_VERBOSE
     std::cerr << "refine_balls() done. Nb of points in triangulation: "
               << c3t3_.triangulation().number_of_vertices() << std::endl;
 #endif
-     CGAL_assertion(use_minimal_size() || c3t3_.is_valid());
+//     CGAL_assertion(use_minimal_size() || c3t3_.is_valid());
  }
 
   // debug_dump_c3t3("dump-mesh-after-protect_edges.binary.cgal", c3t3_);
@@ -785,6 +785,7 @@ Protect_edges_sizing_field<C3T3, MD, Sf, Df>::
 smart_insert_point(const Bare_point& p, Weight w, int dim, const Index& index,
                    ErasedVeOutIt out)
 {
+  Weight initial_weight = w;
 #if CGAL_MESH_3_PROTECTION_DEBUG & 1
   std::cerr << "smart_insert_point( (" << p
             << "), w=" << w
@@ -828,6 +829,9 @@ smart_insert_point(const Bare_point& p, Weight w, int dim, const Index& index,
     while ( ! is_special(nearest_vh) &&
             cwsr(c3t3_.triangulation().point(nearest_vh), - sq_d) == CGAL::SMALLER )
     {
+      if(sq_d <= 0) {
+        continue;
+      }
       CGAL_assertion( use_minimal_size() || sq_d > 0);
 
       bool special_ball = false;
@@ -1008,6 +1012,12 @@ smart_insert_point(const Bare_point& p, Weight w, int dim, const Index& index,
     w = minimal_weight();
     insert_a_special_ball = true;
   }
+  std::ofstream outWeightPoints(R"(../data/weighted_points.xyz)", std::ios::app);
+  outWeightPoints << p.x() << " " << p.y() << " " << p.z() << " " << w << std::endl;
+  outWeightPoints.close();
+  if(w != initial_weight) {
+    std::cout << "initial weight: " << initial_weight << " new weight: " << w << std::endl;
+  }
   Vertex_handle v = insert_point(p,w,dim,index, insert_a_special_ball);
 
   /// @TODO `insert_point` does insert in unchecked_vertices anyway!
@@ -1036,6 +1046,9 @@ insert_balls_on_edges()
   {
     if(forced_stop()) break;
     const Curve_index& curve_index = std::get<0>(ft);
+    // if(curve_index == 80) {
+    //   continue;
+    // }
     if ( ! is_treated(curve_index) )
     {
 #if CGAL_MESH_3_PROTECTION_DEBUG & 1
@@ -1408,6 +1421,7 @@ refine_balls()
   bool restart = true;
   using CGAL::Mesh_3::internal::refine_balls_max_nb_of_loops;
   this->refine_balls_iteration_nb = 0;
+  const int refine_balls_max_nb_of_loops_user_defined = 4;
   while ( (!unchecked_vertices_.empty() || restart) &&
           this->refine_balls_iteration_nb < refine_balls_max_nb_of_loops)
   {

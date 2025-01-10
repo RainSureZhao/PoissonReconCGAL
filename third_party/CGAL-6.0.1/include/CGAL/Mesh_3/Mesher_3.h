@@ -485,7 +485,7 @@ refine_mesh(std::string dump_after_refine_surface_prefix)
   {
     // Then scan volume and refine it
     CGAL_MESH_3_TASK_BEGIN(scan_cells_task_handle);
-    cells_mesher_.scan_triangulation();
+//    cells_mesher_.scan_triangulation();
     CGAL_MESH_3_TASK_END(scan_cells_task_handle);
     refinement_stage = REFINE_ALL;
 #ifdef CGAL_MESH_3_PROFILING

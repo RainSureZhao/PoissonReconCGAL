@@ -275,7 +275,7 @@ struct C3t3_initializer < C3T3, MD, MC, true, CGAL::Tag_true >
         }
         else
         {
-          helper.update_restricted_cells();
+//          helper.update_restricted_cells();
           if(c3t3.number_of_cells() == 0) {
             need_more_init = true;
           }

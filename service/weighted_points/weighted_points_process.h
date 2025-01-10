@@ -84,7 +84,7 @@ namespace service::weighted_points {
      * @param iterations
      * @return
      */
-    Mesh3 GetSphere(const Point_3& center, double radius, unsigned int iterations = 2) {
+    Mesh3 GetSphere(const Point_3& center, double radius, unsigned int iterations = 1) {
         Mesh3 mesh;
         CGAL::make_icosahedron<Mesh3, Point_3>(mesh, center, std::sqrt(radius));
         CGAL::Subdivision_method_3::Loop_subdivision(

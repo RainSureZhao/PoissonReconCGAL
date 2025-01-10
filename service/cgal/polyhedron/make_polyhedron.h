@@ -129,6 +129,7 @@ namespace service::cgal::polyhedron {
                 curve.push_back(p2);
                 if(curve.size() > 1) result.push_back(curve);
                 curve.clear();
+//                curve.push_back(p2);
             }
         }
         curve.push_back(featureCurve.back());
